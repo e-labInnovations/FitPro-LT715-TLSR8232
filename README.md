@@ -1,6 +1,6 @@
-# Hacking FitPro LT715 Watch
+# Hacking FitPro LT715/LT716 Watch
 
-Reverse engineering and custom firmware development for the **FitPro LT715 Smartwatch**, which uses the **Telink TLSR8232** SoC.
+Reverse engineering and custom firmware development for the **FitPro LT715/LT716 Smartwatch**, which uses the **Telink TLSR8232** SoC.
 
 The goal is to replace the stock firmware with a custom one for my new project.
 
@@ -10,7 +10,7 @@ The goal is to replace the stock firmware with a custom one for my new project.
 
 | Component      | Details                                            |
 | -------------- | -------------------------------------------------- |
-| Watch model    | FitPro LT715                                       |
+| Watch model    | FitPro LT715/LT716                                 |
 | MCU            | Telink TLSR8232F512/F128 ET24 (24-pin, no RST pin) |
 | SOC ID         | `0x5316`                                           |
 | Display        | ST7735 128x128 TFT                                 |
@@ -32,14 +32,36 @@ The goal is to replace the stock firmware with a custom one for my new project.
 
 > **Note**: Backlight `PB3` HIGH = ON (direct drive, not via NPN transistor)
 
+### Battery Sensing
+
+| Signal     | GPIO | Notes                                      |
+| ---------- | ---- | ------------------------------------------ |
+| VBAT sense | PB1  | 1:4 resistor divider from raw battery rail |
+
+> **Note**: The TLSR8232's internal VBAT ADC channel reads VDD (regulated 3.3V), not the battery.
+> PB1 reads VBAT/4 via a hardware resistor divider on the PCB. Multiply ADC result by 4 to recover
+> actual battery voltage (3.0–4.2V range). Verified by GPIO scan with known battery voltages.
+
+### UART Debug (FPC pads)
+
+| Signal | GPIO | Notes         |
+| ------ | ---- | ------------- |
+| TX     | PB4  | FPC debug pad |
+| RX     | PB5  | FPC debug pad |
+
 ### PCB Test Pads
 
 | Pad | Function                                 |
 | --- | ---------------------------------------- |
 | SWS | SWire debug interface (flash / recovery) |
 | DAT | Secondary GPIO — not SWire               |
-| 3V3 | 3.3V supply                              |
+| 3V3 | 3.3V supply (post-LDO, not VBAT)         |
 | GND | Ground                                   |
+
+### Other Peripherals (not yet mapped)
+
+> Vibrator, heart rate sensor, buttons, accelerometer — GPIO assignments unknown.
+> ADC scan hinted PB2/PB5 may carry HR sensor signals but not confirmed.
 
 ---
 
