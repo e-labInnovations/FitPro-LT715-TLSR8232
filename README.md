@@ -86,7 +86,7 @@ The goal is to replace the stock firmware with a custom one for my new project.
 │   └── uart/               # UART helper
 ├── sdk/                    # Docker-based build environment
 └── tools/
-    ├── img2c.py            # PNG → C header (BGR565, optional RLE / alpha mask)
+    ├── img2c.py            # PNG → C header (RGB565, optional RLE / alpha mask)
     └── tlsr82-debugger-client/  # SWire flash tool
 ```
 

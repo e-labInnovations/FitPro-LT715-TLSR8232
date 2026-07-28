@@ -44,14 +44,15 @@
 #define INITR_GREENTAB    0x0
 #define INITR_REDTAB      0x1
 
-// Colors (BGR565 — channels swapped on this display)
+// Colors (RGB565 — the panel's B/G/R filter order is handled by the MADCTL
+// BGR bit, so pixel data is ordinary RGB565)
 #define ST77XX_BLACK      0x0000
 #define ST77XX_WHITE      0xFFFF
-#define ST77XX_RED        0x07E0
-#define ST77XX_GREEN      0x001F
-#define ST77XX_BLUE       0xF800
-#define ST77XX_YELLOW     0x07FF
-#define ST77XX_CYAN       0xF81F
+#define ST77XX_RED        0xF800
+#define ST77XX_GREEN      0x07E0
+#define ST77XX_BLUE       0x001F
+#define ST77XX_YELLOW     0xFFE0
+#define ST77XX_CYAN       0x07FF
 #define ST77XX_MAGENTA    0xF81F
 
 // LP715 Watch Pin Mapping
@@ -74,7 +75,7 @@ uint16_t display_color(uint8_t r, uint8_t g, uint8_t b);
 
 // Color image blit — streams pixels into one address window instead of
 // re-addressing per pixel, so it is far faster than looping draw_pixel.
-// Pixel data is BGR565 (see display_color); generate it with tools/img2c.py.
+// Pixel data is RGB565 (see display_color); generate it with tools/img2c.py.
 void display_draw_image(uint8_t x, uint8_t y, uint8_t w, uint8_t h, const uint16_t *data);
 // Same, but reads a w x h window out of a wider source buffer.
 void display_draw_image_ex(uint8_t x, uint8_t y, uint8_t w, uint8_t h,

@@ -40,7 +40,6 @@ _attribute_ram_code_ void irq_handler(void) {}
 #define TFT_CMD_RAMWR    0x2c
 #define TFT_CMD_SLEEPOUT 0x11
 #define TFT_CMD_SWRESET  0x01
-#define TFT_CMD_INVON    0x21
 
 // Display dimensions - adjust if needed
 #define TFT_WIDTH  128
@@ -48,7 +47,7 @@ _attribute_ram_code_ void irq_handler(void) {}
 #define TFT_X_OFFSET 2
 #define TFT_Y_OFFSET 1
 
-// Colors (RGB565)
+// Colors (RGB565 — correct once MADCTL sets the BGR bit, see tft_cmd_madctl)
 #define TFT_COLOR_BLACK 0x0000
 #define TFT_COLOR_WHITE 0xffff
 #define TFT_COLOR_RED   0xf800
@@ -64,11 +63,12 @@ typedef struct {
 
 static const tft_cmd_t tft_cmd_swreset  = {.cmd = TFT_CMD_SWRESET,  .sleep_ms = 120, .args_len = 0, .args = {}};
 static const tft_cmd_t tft_cmd_sleepout = {.cmd = TFT_CMD_SLEEPOUT, .sleep_ms = 120, .args_len = 0, .args = {}};
-static const tft_cmd_t tft_cmd_madctl   = {.cmd = TFT_CMD_MADCTL,   .sleep_ms = 10,  .args_len = 1, .args = {0x00}};
+// 0x08 = BGR bit. The panel's color filter is B-G-R, so this lets the
+// controller do the swap and keeps pixel data as ordinary RGB565.
+static const tft_cmd_t tft_cmd_madctl   = {.cmd = TFT_CMD_MADCTL,   .sleep_ms = 10,  .args_len = 1, .args = {0x08}};
 static const tft_cmd_t tft_cmd_disp_on  = {.cmd = TFT_CMD_ON,       .sleep_ms = 120, .args_len = 0, .args = {}};
 static const tft_cmd_t tft_cmd_normal   = {.cmd = TFT_CMD_NRON,     .sleep_ms = 10,  .args_len = 0, .args = {}};
 static const tft_cmd_t tft_cmd_colmod   = {.cmd = TFT_CMD_COLMOD,   .sleep_ms = 10,  .args_len = 1, .args = {0x05}};
-static const tft_cmd_t tft_cmd_invon    = {.cmd = TFT_CMD_INVON,    .sleep_ms = 10,  .args_len = 0, .args = {}};
 static const tft_cmd_t tft_cmd_caset    = {
     .cmd = TFT_CMD_CASET, .sleep_ms = 10, .args_len = 4,
     .args = {0x00, 0x00, 0x00, TFT_WIDTH - 1}
@@ -173,7 +173,6 @@ static void tft_init_display(void) {
     tft_send_cmd(&tft_cmd_sleepout);
     tft_send_cmd(&tft_cmd_madctl);
     tft_send_cmd(&tft_cmd_colmod);
-    tft_send_cmd(&tft_cmd_invon);
     tft_send_cmd(&tft_cmd_disp_on);
     tft_send_cmd(&tft_cmd_caset);
     tft_send_cmd(&tft_cmd_raset);

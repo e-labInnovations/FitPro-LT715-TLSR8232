@@ -13,12 +13,13 @@ are streamed to the panel as they are read.
 | Sprite, opaque | `display_draw_image()` — one address window, no per-pixel re-addressing |
 | Sprite, transparent | `gfx_draw_rgb_bitmap_with_mask()` — 1bpp alpha mask, background shows through |
 
-## Pixel format: BGR565, not RGB565
+## Pixel format: plain RGB565
 
-This panel is wired with red and blue swapped (see `display_color()` in
-[display.c](../../lib/display/display.c)), so image data must be stored as
-`bbbbbggg gggrrrrr`. `tools/img2c.py` already emits that. If you convert an
-image with some other tool and everything comes out blue-tinted, that's why.
+The panel's color filter is physically B-G-R, but the driver leaves the MADCTL
+BGR bit set ([display.c](../../lib/display/display.c)) so the swap happens in
+hardware — image data is ordinary RGB565, `rrrrrggg gggbbbbb`, matching
+`display_color()`. `tools/img2c.py` emits exactly that. If reds come out green,
+something is packing the channels itself on top of the driver.
 
 ## Converting your own image
 

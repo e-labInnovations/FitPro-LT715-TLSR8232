@@ -15,7 +15,7 @@
 #include "../../lib/fonts/FreeSans12pt7b.h"
 
 #include "sunset.h"   // sunset_rle[]  — 128x128, 860 bytes
-#include "heart.h"    // heart_data[]  — 32x32 BGR565 + heart_mask[] 1bpp
+#include "heart.h"    // heart_data[]  — 32x32 RGB565 + heart_mask[] 1bpp
 
 _attribute_ram_code_ void irq_handler(void) {}
 
@@ -44,7 +44,7 @@ int main() {
     gfx_set_font(&FreeSans12pt7b);
     gfx_set_text_color(ST77XX_WHITE);
     gfx_set_cursor(44, 28);
-    gfx_print("BGR565");
+    gfx_print("RGB565");
 
     while (1);
     return 0;

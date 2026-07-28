@@ -239,8 +239,10 @@ void display_draw_image_rle(uint8_t x, uint8_t y, uint8_t w, uint8_t h,
 }
 
 uint16_t display_color(uint8_t r, uint8_t g, uint8_t b) {
-    // BGR565 — channels swapped to match display's color mapping
-    return ((b & 0xF8) << 8) | ((r & 0xFC) << 3) | ((g & 0xF8) >> 3);
+    // Plain RGB565. The panel's colour filter is wired B-G-R, so MADCTL keeps
+    // the BGR bit set (see display_set_rotation) and the swap happens in
+    // hardware — the data we send is ordinary RGB565.
+    return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
 }
 
 void backlight_on(void)  { gpio_write(PIN_BL, 1); }

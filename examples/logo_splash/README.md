@@ -37,8 +37,8 @@ GFX font later and the strip can go away.
 
 ## Colors
 
-Images are stored BGR565 because red and blue are swapped on this panel — see
-[../image/README.md](../image/README.md) for the details.
+Images are plain RGB565; the panel's B-G-R filter order is handled by the
+MADCTL BGR bit in the driver — see [../image/README.md](../image/README.md).
 
 ## Build and flash
 
