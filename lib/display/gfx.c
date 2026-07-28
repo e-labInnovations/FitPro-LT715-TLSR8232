@@ -334,12 +334,8 @@ void gfx_draw_rgb_bitmap(int16_t x, int16_t y, const uint16_t *bitmap, int16_t w
     int16_t dx = x1 - x;
     int16_t dy = y1 - y;
     
-    // Draw visible portion of bitmap
-    for (int16_t j = 0; j < bh; j++) {
-        for (int16_t i = 0; i < bw; i++) {
-            gfx_draw_pixel(x1 + i, y1 + j, bitmap[(dy + j) * w + (dx + i)]);
-        }
-    }
+    // Stream the visible portion straight into one address window
+    display_draw_image_ex(x1, y1, bw, bh, &bitmap[(uint32_t)dy * w + dx], w);
 }
 
 // Draw a 16-bit color bitmap with 1-bit mask

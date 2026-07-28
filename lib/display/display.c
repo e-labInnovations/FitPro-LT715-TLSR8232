@@ -190,6 +190,54 @@ void display_draw_pixel(uint16_t x, uint16_t y, uint16_t color) {
     gpio_write(PIN_CS, 1);
 }
 
+void display_draw_image_ex(uint8_t x, uint8_t y, uint8_t w, uint8_t h,
+                           const uint16_t *data, uint16_t src_stride) {
+    if (x >= _display_width || y >= _display_height || !w || !h) return;
+
+    // Clip to the right/bottom edges
+    if (x + w > _display_width)  w = _display_width  - x;
+    if (y + h > _display_height) h = _display_height - y;
+
+    gpio_write(PIN_CS, 0);
+    display_set_addr_window(x, y, x + w - 1, y + h - 1);
+    for (uint8_t row = 0; row < h; row++) {
+        const uint16_t *p = data + (uint32_t)row * src_stride;
+        for (uint8_t col = 0; col < w; col++) st_data16(*p++);
+    }
+    gpio_write(PIN_CS, 1);
+}
+
+void display_draw_image(uint8_t x, uint8_t y, uint8_t w, uint8_t h, const uint16_t *data) {
+    display_draw_image_ex(x, y, w, h, data, w);
+}
+
+void display_draw_image_rle(uint8_t x, uint8_t y, uint8_t w, uint8_t h,
+                            const uint16_t *rle, uint16_t runs) {
+    if (x >= _display_width || y >= _display_height || !w || !h) return;
+
+    uint8_t vw = (x + w > _display_width)  ? (uint8_t)(_display_width  - x) : w;
+    uint8_t vh = (y + h > _display_height) ? (uint8_t)(_display_height - y) : h;
+
+    gpio_write(PIN_CS, 0);
+    display_set_addr_window(x, y, x + vw - 1, y + vh - 1);
+
+    // Walk the runs in row-major order, dropping the pixels clipped off the
+    // right edge so exactly vw*vh pixels reach the address window.
+    uint8_t col = 0, row = 0;
+    for (uint16_t r = 0; r < runs && row < vh; r++) {
+        uint16_t count = rle[r * 2];
+        uint16_t color = rle[r * 2 + 1];
+        while (count--) {
+            if (col < vw) st_data16(color);
+            if (++col == w) {
+                col = 0;
+                if (++row == vh) break;
+            }
+        }
+    }
+    gpio_write(PIN_CS, 1);
+}
+
 uint16_t display_color(uint8_t r, uint8_t g, uint8_t b) {
     // BGR565 — channels swapped to match display's color mapping
     return ((b & 0xF8) << 8) | ((r & 0xFC) << 3) | ((g & 0xF8) >> 3);

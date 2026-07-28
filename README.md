@@ -72,12 +72,21 @@ The goal is to replace the stock firmware with a custom one for my new project.
 ├── binaries/               # Precompiled firmware binaries
 ├── docs/                   # Datasheets and pinout diagrams
 ├── examples/               # Example firmware projects
-│   └── display/            # ST7735 display test
+│   ├── display/            # ST7735 display test
+│   ├── display_lib/        # Shapes + text via the gfx layer
+│   ├── image/              # Color images from flash (RLE, sprites, alpha masks)
+│   ├── logo_splash/        # e-lab innovations boot splash
+│   ├── battery_pct/        # Battery percentage readout
+│   ├── uart/               # UART debug output
+│   ├── ble_adv/            # BLE advertising
+│   └── blink/              # Backlight blink
 ├── lib/                    # Reusable libraries
 │   ├── display/            # ST7735 display driver
-│   └── fonts/              # Bitmap fonts (Adafruit GFX format)
+│   ├── fonts/              # Bitmap fonts (Adafruit GFX format)
+│   └── uart/               # UART helper
 ├── sdk/                    # Docker-based build environment
 └── tools/
+    ├── img2c.py            # PNG → C header (BGR565, optional RLE / alpha mask)
     └── tlsr82-debugger-client/  # SWire flash tool
 ```
 
@@ -95,9 +104,8 @@ docker build -t tlsr8232-sdk .
 ### 2. Build an example
 
 ```bash
-docker run --rm -v $(pwd)/examples/display:/app -it tlsr8232-sdk bash -c "
-  make -C /app _build/display.bin SDK=/opt/ble_sdk_hawk
-"
+# mount the repo root — examples pull in ../../lib
+docker run --rm -v $(pwd):/src -w /src/examples/display -it tlsr8232-sdk make
 ```
 
 ### 3. Flash to the watch

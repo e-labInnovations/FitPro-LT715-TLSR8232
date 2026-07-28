@@ -71,6 +71,17 @@ void display_fill_window(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_
 void display_draw_pixel(uint16_t x, uint16_t y, uint16_t color);
 void display_draw_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t color);
 uint16_t display_color(uint8_t r, uint8_t g, uint8_t b);
+
+// Color image blit — streams pixels into one address window instead of
+// re-addressing per pixel, so it is far faster than looping draw_pixel.
+// Pixel data is BGR565 (see display_color); generate it with tools/img2c.py.
+void display_draw_image(uint8_t x, uint8_t y, uint8_t w, uint8_t h, const uint16_t *data);
+// Same, but reads a w x h window out of a wider source buffer.
+void display_draw_image_ex(uint8_t x, uint8_t y, uint8_t w, uint8_t h,
+                           const uint16_t *data, uint16_t src_stride);
+// Run-length encoded variant: `rle` is `runs` pairs of (pixel_count, color).
+void display_draw_image_rle(uint8_t x, uint8_t y, uint8_t w, uint8_t h,
+                            const uint16_t *rle, uint16_t runs);
 void backlight_on(void);
 void backlight_off(void);
 

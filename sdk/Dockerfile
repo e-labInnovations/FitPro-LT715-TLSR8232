@@ -1,4 +1,6 @@
-FROM ubuntu:22.04
+# tc32_gcc ships as x86_64 Linux binaries, so pin the platform — on Apple
+# Silicon a native arm64 image builds fine but cannot exec the compiler.
+FROM --platform=linux/amd64 ubuntu:22.04
 
 RUN apt-get update && \
 	apt-get install -y wget make bzip2 unzip
@@ -13,6 +15,7 @@ RUN cd /opt && \
 
 WORKDIR /app
 
-ENV SDK="/opt/8232_BLE_SDK/ble_sdk_hawk" \
+# The zip is named 8232_BLE_SDK but extracts straight to /opt/ble_sdk_hawk
+ENV SDK="/opt/ble_sdk_hawk" \
 	TC32_HOME="/opt/tc32" \
 	PATH="/opt/tc32/bin:${PATH}"

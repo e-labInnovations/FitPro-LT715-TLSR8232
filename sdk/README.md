@@ -19,6 +19,10 @@ This avoids installing the SDK and compiler directly on your host machine and ke
 docker build -t tlsr8232-sdk .
 ```
 
+> **Apple Silicon**: the Dockerfile pins `--platform=linux/amd64` because the TC32
+> toolchain is x86_64-only. A native arm64 image builds happily and then fails with
+> `exec format error` the first time it runs `tc32-elf-gcc`.
+
 ---
 
 ## Build a Project
@@ -26,12 +30,15 @@ docker build -t tlsr8232-sdk .
 Run from the **project root directory**:
 
 ```bash
-docker run --rm -v $(pwd)/examples/display:/app -it tlsr8232-sdk bash -c "
-  make -C /app _build/display.bin SDK=/opt/ble_sdk_hawk
-"
+docker run --rm -v $(pwd):/src -w /src/examples/display -it tlsr8232-sdk make
 ```
 
-> **Note**: Always pass `SDK=/opt/ble_sdk_hawk` explicitly. The SDK zip extracts to `/opt/ble_sdk_hawk/` directly — not `/opt/8232_BLE_SDK/ble_sdk_hawk/` as the zip name implies.
+Mount the **repo root**, not the example directory — examples that use `lib/`
+(display, fonts, uart) reference it as `../../lib`.
+
+> **Note**: `$SDK` is set in the image to `/opt/ble_sdk_hawk`, which is where the
+> zip actually extracts to — despite being named `8232_BLE_SDK.zip`. No need to
+> pass `SDK=` on the command line.
 
 ---
 
