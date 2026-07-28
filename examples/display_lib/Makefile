@@ -2,7 +2,7 @@ TARGET = display_lib
 CC  = $(TC32_HOME)/bin/tc32-elf-gcc
 LD  = $(TC32_HOME)/bin/tc32-elf-ld
 CP  = $(TC32_HOME)/bin/tc32-elf-objcopy
-CCFLAGS = -Wall -std=gnu99 -DMCU_STARTUP_5316 -I $(SDK)/ -I ../../lib -ffunction-sections -fdata-sections
+CCFLAGS = -Wall -std=gnu99 -DMCU_STARTUP_5316 -I $(SDK)/ -I ../../lib -ffunction-sections -fdata-sections -MMD -MP
 LDFLAGS = --gc-sections -T $(SDK)/boot.link
 LIB     = $(SDK)/proj_lib/liblt_5316.a
 BUILD_DIR = _build
@@ -49,6 +49,9 @@ $(BUILD_DIR)/lib/%.o: ../../lib/display/%.c
 $(BUILD_DIR)/fonts/%.o: ../../lib/fonts/%.c
 	mkdir -p $(BUILD_DIR)/fonts
 	$(CC) -c $(CCFLAGS) -o $@ $<
+
+# Rebuild objects when the headers they include change
+-include $(shell find $(BUILD_DIR) -name "*.d" 2>/dev/null)
 
 .PHONY: clean
 clean:

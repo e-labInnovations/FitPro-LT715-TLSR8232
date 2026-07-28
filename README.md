@@ -76,6 +76,7 @@ The goal is to replace the stock firmware with a custom one for my new project.
 │   ├── display_lib/        # Shapes + text via the gfx layer
 │   ├── image/              # Color images from flash (RLE, sprites, alpha masks)
 │   ├── logo_splash/        # e-lab innovations boot splash
+│   ├── color_test/         # RGB565 channel-mapping diagnostic
 │   ├── battery_pct/        # Battery percentage readout
 │   ├── uart/               # UART debug output
 │   ├── ble_adv/            # BLE advertising

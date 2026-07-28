@@ -5,7 +5,7 @@ CC = $(TC32_HOME)/bin/tc32-elf-gcc
 LD = $(TC32_HOME)/bin/tc32-elf-ld
 CP = $(TC32_HOME)/bin/tc32-elf-objcopy
 
-CCFLAGS = -Wall -std=gnu99 -DMCU_STARTUP_5316 -I $(SDK)/ -ffunction-sections -fdata-sections
+CCFLAGS = -Wall -std=gnu99 -DMCU_STARTUP_5316 -I $(SDK)/ -ffunction-sections -fdata-sections -MMD -MP
 
 LDFLAGS = --gc-sections -T $(SDK)/boot.link
 
@@ -52,6 +52,9 @@ $(BUILD_DIR)/%.o: %.c
 .PHONE: all
 all: $(DRIVERS_OBJS) $(STARTUP_OBJ)
 	@echo $(DRIVERS_OBJ)
+
+# Rebuild objects when the headers they include change
+-include $(shell find $(BUILD_DIR) -name "*.d" 2>/dev/null)
 
 .PHONY: clean
 clean:

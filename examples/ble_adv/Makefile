@@ -5,7 +5,7 @@ LD  = $(TC32_HOME)/bin/tc32-elf-ld
 CP  = $(TC32_HOME)/bin/tc32-elf-objcopy
 
 CCFLAGS = -Wall -std=gnu99 -DMCU_STARTUP_5316 -D__TL_LIB_5316__ -D__PROJECT_5316_BLE_SAMPLE__ \
-          -I $(SDK)/ -ffunction-sections -fdata-sections
+          -I $(SDK)/ -ffunction-sections -fdata-sections -MMD -MP
 
 LDFLAGS = --gc-sections -T $(SDK)/boot.link
 
@@ -81,6 +81,9 @@ $(BUILD_DIR)/asm/div_mod.o: $(DIVMOD_SRC)
 $(BUILD_DIR)/%.o: %.c
 	mkdir -p $(BUILD_DIR)
 	$(CC) -c $(CCFLAGS) -o $@ $<
+
+# Rebuild objects when the headers they include change
+-include $(shell find $(BUILD_DIR) -name "*.d" 2>/dev/null)
 
 .PHONY: clean
 clean:
