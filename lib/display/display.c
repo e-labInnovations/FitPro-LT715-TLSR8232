@@ -5,7 +5,18 @@
 #include "drivers/5316/timer.h"
 
 // SPI clock = 16MHz / (2 * (SPI_DIV + 1))
-#define SPI_DIV 3
+//
+// 0 is 8 MHz, the fastest this peripheral reaches from a 16 MHz system clock,
+// and it is a straight 4x on every pixel pushed. The panel is not the limit:
+// the usb2tft project drives this same salvaged ST7735 from an RP2040 at
+// 31.25 MHz. 3 (2 MHz) was a conservative bring-up value that was never revised
+// once the panel proved good.
+//
+// Override from the build if a particular set of leads turns out to be noisy —
+// 1 gives 4 MHz. Tearing or speckle on the flex is what that would look like.
+#ifndef SPI_DIV
+#define SPI_DIV 0
+#endif
 
 uint16_t _display_width  = ST7735_TFTWIDTH;
 uint16_t _display_height = ST7735_TFTHEIGHT;
