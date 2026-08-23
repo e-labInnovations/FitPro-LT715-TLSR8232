@@ -294,6 +294,87 @@ diode across the motor pads). Beep from the transistor's base/gate — or the fa
 end of its series resistor — to each candidate package pin: 3 (PA3), 4 (PA4),
 9 (PA5), 12 (PB2), 23 (PC4). Exactly one will read as a short.
 
+## Stock Firmware Structure
+
+Reverse engineered from `binaries/stock/LT716_V10712_211091429.bin` with
+[tools/fwtool.py](tools/fwtool.py). Every finding below was verified by decoding
+it and rendering the result back out — the fonts read as legible text, the CJK
+index matches Unicode, the strings match the UI.
+
+```
+0x000000-0x01a8a4  main application     Telink KNLT image, length at 0x18
+0x01a8a4-0x020000  erased padding
+0x020000-0x028c74  second application   KNLT image, 36 KB
+0x028c74-0x029000  erased padding
+0x029011-0x031c58  font, U+0001..U+07CB 1995 glyphs
+0x031c58-0x0339b0  CJK codepoint index  3756 x uint16, sorted
+0x0339b0-0x0441c8  font, CJK            3756 glyphs, same format
+0x0441c8-0x044200  string table header  magic 0xBEEF
+0x044200-0x04a860  UI strings           7 languages x 78 slots
+0x04a860-0x06fc04  not yet identified   ~149 KB
+0x06fc04-0x07d000  erased
+```
+
+**Two applications, not one.** Both carry the `KNLT` magic at +8 and their own
+length at +0x18, and both end exactly at that length. The second is a third the
+size of the first; the `UPGRADE` string in the main image suggests it is the OTA
+updater, but that is not yet confirmed.
+
+### Glyph format
+
+Both fonts use one format: a **12x12 cell in 18 bytes**, split into two planes.
+
+```
+bytes 0..11   left 8 columns, one byte per row, MSB = leftmost pixel
+bytes 12..17  right 4 columns, two rows per byte,
+              high nibble = even row, low nibble = odd row
+```
+
+Latin glyphs never touch the right-hand plane, so those six bytes are zero — a
+plain 8-wide, 18-row read renders them correctly by accident, which is a good
+way to waste an afternoon. CJK glyphs use all twelve columns, and only the
+split-plane read produces legible characters.
+
+Lookup differs per range:
+
+- **U+0001..U+07CB** — direct: `addr = 0x028fff + codepoint * 18`. Covers ASCII,
+  Latin-1, Latin Ext-A/B, Greek, Cyrillic, Armenian, Hebrew, Arabic and Syriac,
+  every block fully inked.
+- **CJK** — binary search the sorted index at `0x031c58` (3756 entries,
+  U+4E00..U+9F9F), then `addr = 0x0339b0 + index * 18`.
+
+### UI strings
+
+A flat table at `0x044200`: 48-byte slots holding UTF-16LE, 78 slots per
+language, 7 language blocks of `0xea0` bytes each — English, Dutch, French,
+Portuguese, Turkish, Malay, Slovak. Slot 0 is "Steps", slot 1 "Heart rate".
+
+The slot list doubles as a feature inventory: Steps, Heart rate, Sports,
+Running, Situp, Skipping, Bike riding, Camera, Stopwatch, Looking for, Message,
+Qr code, Music, Sleep, Weather, Long press, Low battery, Power down, Unbundle.
+
+### What is still unknown
+
+`0x04a860`-`0x06fc04`, about 149 KB. It is not raw RGB565, not 1bpp bitmaps at
+any display-plausible width, not a fixed-stride font (no periodicity), and not
+UTF-16 text. Byte density sits near 50%, so compressed assets are the most
+likely answer. The icons the UI clearly draws — battery, power symbol — have not
+been located either; the region around `0x019200` in the main application looks
+bitmap-like and is the next place to check.
+
+### Using the tool
+
+```bash
+FW=binaries/stock/LT716_V10712_211091429.bin
+python3 tools/fwtool.py $FW map                 # the layout above
+python3 tools/fwtool.py $FW glyph U+4E09 A 上   # ASCII art for any codepoint
+python3 tools/fwtool.py $FW strings             # every string, all languages
+python3 tools/fwtool.py $FW cjk --count 128     # the codepoint index
+python3 tools/fwtool.py $FW atlas out.png --cjk --count 96 --cols 24
+```
+
+---
+
 ### ⚠️ SWire and running firmware are mutually exclusive
 
 On this board you get debug **or** firmware, never both at once. Two reasons
