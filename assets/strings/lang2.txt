@@ -1,0 +1,79 @@
+# language 2, table at 0x045f40, magic 0xbeef
+  0  Mesure
+  1  Rythme cardiaque
+  2  Des sports
+  3  Courir
+  4  Lève - toi.
+  5  Corde à sauter
+  6  Ride
+  7  Prenez une photo
+  8  Chronomètre
+  9  À la recherche de
+ 10  Réinitialiser
+ 11  L'information
+ 12  QR code
+ 13  En savoir plus
+ 14  Le matin
+ 15  Après midi
+ 16  Lundi
+ 17  Mardi
+ 18  Mercredi
+ 19  Jeudi
+ 20  Vendredi
+ 21  Samedi
+ 22  Dimanche
+ 23  Km
+ 24  Miles
+ 25  Calories
+ 26  Arrêtez
+ 27  Délier
+ 28  Vide...
+ 29  Télécharger l'appli
+ 30  Thème
+ 31  temps
+ 32  La musique
+ 33  Dormir
+ 34  Temps
+ 35  revenir
+ 36  appui long
+ 37  batterie faible
+ 38  德语
+ 39  Die Pace
+ 40  Pulsschlag
+ 41  Sport
+ 42  Laufen
+ 43  Sit-ups
+ 44  Springseil
+ 45  Fahrt
+ 46  Mach ein Foto
+ 47  Stoppuhr
+ 48  Auf der Suche nach
+ 49  Zurücksetzen
+ 50  Informationen
+ 51  QR-Code
+ 52  Mehr
+ 53  Morgen
+ 54  Nachmittag
+ 55  Montag
+ 56  Dienstag
+ 57  Mittwoch
+ 58  Donnerstag
+ 59  Freitag
+ 60  Samstag
+ 61  Sonntag
+ 62  Km
+ 63  Meilen
+ 64  Kalorien
+ 65  Herunterfahren
+ 66  Löse die Bindung
+ 67  Leer...
+ 68  Lade App herunter
+ 69  Thema
+ 70  Zeit
+ 71  Musik
+ 72  Schlaf
+ 73  Wetter
+ 74  Rückkehr
+ 75  lange drücken
+ 76  niedriger Batteriestatus
+ 77  葡萄牙

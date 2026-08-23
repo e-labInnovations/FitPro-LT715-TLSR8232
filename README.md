@@ -750,7 +750,10 @@ assets/
 └── headers/            one .h per record, whole record kept intact
 ```
 
-The output is gitignored — it is derived, 3 MB, and one command away.
+The output is committed so it is browsable on GitHub and the headers can be used
+without running anything. It is still fully derived: the same binary and the same
+`reversed/` produce a byte-identical tree, so re-run the tool rather than editing
+a file in `assets/`.
 
 ### Exact: fonts and strings
 

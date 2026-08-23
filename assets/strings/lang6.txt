@@ -1,0 +1,40 @@
+# language 6, table at 0x0499c0, magic 0xbeef
+  0  Počítanie krokov
+  1  Tep srdca
+  2  športové
+  3  jogging
+  4  Posaďte sa
+  5  Švihadlo
+  6  jazdecké
+  7  Nasnímajte fotografiu
+  8  stopky
+  9  Hľadám
+ 10  Reset
+ 11  informácie
+ 12  QR kód
+ 13  viac
+ 14  dopoludnia
+ 15  popoludní
+ 16  pondelok
+ 17  utorok
+ 18  streda
+ 19  štvrtok
+ 20  piatok
+ 21  sobota
+ 22  nedeľa
+ 23  kilometer
+ 24  míle
+ 25  kalórií
+ 26  Vypnite
+ 27  unbundling
+ 28  prázdny...
+ 29  Stiahnite si aplikáciu
+ 30  téma
+ 31  čas
+ 32  hudba
+ 33  spacie
+ 34  počasie
+ 35  spiatočný
+ 36  dlhé stlačenie
+ 37  slabá batéria
+ 77  㼆汬汬﻾糾းတᠸ

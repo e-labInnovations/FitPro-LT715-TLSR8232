@@ -1,0 +1,79 @@
+# language 1, table at 0x0450a0, magic 0xbeef
+  0  Pace nemen
+  1  Hartslag
+  2  Sport
+  3  Rennen.
+  4  Abdominale curl
+  5  Touw huppelt.
+  6  Rijden
+  7  Fotografie
+  8  StopwatchComment
+  9  Op zoek naar
+ 10  Opnieuw
+ 11  informatie
+ 12  Qr code
+ 13  Meer
+ 14  Goedemorgen.
+ 15  Middag
+ 16  Maandag
+ 17  Dinsdag
+ 18  Woensdag
+ 19  Donderdag
+ 20  Vrijdag
+ 21  Zaterdag
+ 22  Zondag
+ 23  Kilometer
+ 24  Mijl
+ 25  CaloriëName
+ 26  Afsluiten
+ 27  Maak los
+ 28  Leeg...
+ 29  Download App
+ 30  Thema
+ 31  tijd
+ 32  Muziek
+ 33  Slaap
+ 34  Weer
+ 35  terugkeer
+ 36  lang indrukken
+ 37  lage batterij
+ 38  俄语
+ 39  план
+ 40  Частота сердцебиения
+ 41  Виды спорта
+ 42  Беговая
+ 43  Сядьте взлеты
+ 44  Скакалка
+ 45  верховая езда
+ 46  Сфотографируй
+ 47  секундомер
+ 48  Находясь в поиске
+ 49  Сброс
+ 50  информация
+ 51  QR код
+ 52  более
+ 53  утро
+ 54  после полудня
+ 55  понедельник
+ 56  вторник
+ 57  среда
+ 58  четверг
+ 59  пятница
+ 60  суббота
+ 61  воскресенье
+ 62  километр
+ 63  мили
+ 64  Калории
+ 65  Выключить
+ 66  Разукрупнение
+ 67  пустой...
+ 68  Скачать приложение
+ 69  тема
+ 70  время
+ 71  Музыка
+ 72  спальный
+ 73  Погода
+ 74  возвращение
+ 75  долгое нажатие
+ 76  низкий заряд батареи
+ 77  法语

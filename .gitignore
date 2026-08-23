@@ -1,6 +1,2 @@
 _build/
 .DS_Store
-
-# Extracted firmware assets: derived, 3 MB of PNGs, regenerate with
-# python3 tools/assetdump.py binaries/stock/LT716_V10712_211091429.bin assets
-assets/

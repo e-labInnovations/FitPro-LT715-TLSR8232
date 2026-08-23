@@ -1,0 +1,79 @@
+# language 3, table at 0x046de0, magic 0xbeef
+  0  Pace take
+  1  Frequência cardíaca
+  2  Esportes
+  3  Running
+  4  Sit ups
+  5  Pular corda
+  6  Passeio
+  7  Tire uma foto
+  8  Cronômetro
+  9  Procurando por
+ 10  Reset
+ 11  Informação
+ 12  QR code
+ 13  Mais
+ 14  Manhã
+ 15  Tarde
+ 16  Segunda-feira
+ 17  Terça-feira
+ 18  Quarta-feira
+ 19  Quinta-feira
+ 20  Sexta-feira
+ 21  Sábado
+ 22  Domingo
+ 23  Km
+ 24  Milhas
+ 25  Calorias
+ 26  Desligar
+ 27  Desatar
+ 28  Vazio...
+ 29  Baixar aplicativo
+ 30  Tema
+ 31  Tempo
+ 32  Música
+ 33  Dormir
+ 34  Clima
+ 35  Retorna
+ 36  imprensa longa
+ 37  Bateria Fraca
+ 38  西班牙
+ 39  Paso M.
+ 40  Ritmo cardiaco
+ 41  Deportes
+ 42  Corriendo
+ 43  Sentadillas
+ 44  Saltar la cuerda
+ 45  Paseo
+ 46  Tomar una foto
+ 47  Cronómetro
+ 48  Buscando
+ 49  Restablecer
+ 50  Informacion
+ 51  Código QR
+ 52  Más
+ 53  Mañana
+ 54  Tarde
+ 55  Lunes
+ 56  Martes
+ 57  Miercoles
+ 58  Jueves
+ 59  Viernes
+ 60  Sabado
+ 61  Domingo
+ 62  Km
+ 63  Millas
+ 64  Calorías
+ 65  Cerrar
+ 66  Desatar
+ 67  Vacio...
+ 68  Descargar aplicación
+ 69  Tema
+ 70  hora
+ 71  Musica
+ 72  Dormir
+ 73  Clima
+ 74  regreso
+ 75  pulsación larga
+ 76  batería baja
+ 77  土耳其

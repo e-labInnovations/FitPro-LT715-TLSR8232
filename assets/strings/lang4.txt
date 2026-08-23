@@ -1,0 +1,79 @@
+# language 4, table at 0x047c80, magic 0xbeef
+  0  Adım sayma
+  1  Kalp atış hızı
+  2  Spor Dalları
+  3  jogging
+  4  Sit up
+  5  İp atlama ipi
+  6  binme
+  7  Bir resim çekin
+  8  kronometre
+  9  Aramak
+ 10  Sıfırlama
+ 11  bilgi
+ 12  QR kodu
+ 13  daha
+ 14  sabah
+ 15  öğleden sonra
+ 16  Pazartesi
+ 17  Salı
+ 18  Çarşamba
+ 19  Perşembe
+ 20  Cuma
+ 21  Cumartesi
+ 22  Pazar
+ 23  kilometre
+ 24  mil
+ 25  Kalori
+ 26  Kapat
+ 27  Ayrıştırma
+ 28  boş...
+ 29  indir uygulaması
+ 30  Tema
+ 31  zaman
+ 32  müzik
+ 33  uyku
+ 34  Hava
+ 35  dönüş
+ 36  uzun basma
+ 37  Düşük pil
+ 38  波兰
+ 39  Liczenie kroków
+ 40  Tętno
+ 41  Sporty
+ 42  Bieganie
+ 43  Usiądź
+ 44  Skakanka
+ 45  Jeździć
+ 46  Zrób zdjęcie
+ 47  Stoper
+ 48  Szukam
+ 49  Zresetuj
+ 50  Informacja
+ 51  Kod QR
+ 52  Więcej
+ 53  Rano
+ 54  Popołudnie
+ 55  Poniedziałek
+ 56  Wtorek
+ 57  Środa
+ 58  Czwartek
+ 59  Piątek
+ 60  Sobota
+ 61  Niedziela
+ 62  Km
+ 63  Miles
+ 64  Kalorie
+ 65  Zamknij
+ 66  Rozwiązać
+ 67  Pusty...
+ 68  Pobierz aplikację
+ 69  Motyw
+ 70  czas
+ 71  Muzyka
+ 72  Spać
+ 73  Pogoda
+ 74  powrót
+ 75  długie naciśnięcie
+ 76  niski poziom baterii
+ 77  马来西亚

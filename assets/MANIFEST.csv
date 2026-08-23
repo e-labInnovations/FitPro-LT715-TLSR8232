@@ -1,0 +1,538 @@
+kind,offset,length,width_px,height_px,file,note
+font-atlas,0x029011,18432,384,384,fonts/latin_atlas_00.png,U+0001..U+0400
+font-atlas,0x02d811,17478,384,372,fonts/latin_atlas_01.png,U+0401..U+07CB
+font-atlas,0x0339b0,18432,384,384,fonts/cjk_atlas_00.png,U+4E00..U+5E74
+font-atlas,0x0381b0,18432,384,384,fonts/cjk_atlas_01.png,U+5E76..U+70C3
+font-atlas,0x03c9b0,18432,384,384,fonts/cjk_atlas_02.png,U+70C8..U+8BAE
+font-atlas,0x0411b0,12312,384,264,fonts/cjk_atlas_03.png,U+8BAF..U+9F9F
+font-header,0x029011,35910,12,12,fonts/font_latin.h,U+0001..U+07CB
+font-header,0x0339b0,67608,12,12,fonts/font_cjk.h,3756 CJK glyphs
+strings,0x044200,3744,0,0,strings/lang0.txt,78 slots used
+strings,0x0450a0,3744,0,0,strings/lang1.txt,78 slots used
+strings,0x045f40,3744,0,0,strings/lang2.txt,78 slots used
+strings,0x046de0,3744,0,0,strings/lang3.txt,78 slots used
+strings,0x047c80,3744,0,0,strings/lang4.txt,78 slots used
+strings,0x048b20,3744,0,0,strings/lang5.txt,78 slots used
+strings,0x0499c0,3744,0,0,strings/lang6.txt,39 slots used
+graphic,0x04a828,22,8,12,graphics/gfx_000000_8x12_1bpp.png,found by chaining
+graphic-header,0x04a828,22,8,12,headers/gfx_000000_8x12_1bpp.h,found by chaining
+graphic,0x04a83e,178,56,24,graphics/gfx_000016_56x24_1bpp.png,found by chaining
+graphic-header,0x04a83e,178,56,24,headers/gfx_000016_56x24_1bpp.h,found by chaining
+graphic,0x04a8f0,178,56,24,graphics/gfx_0000c8_56x24_1bpp.png,found by chaining
+graphic-header,0x04a8f0,178,56,24,headers/gfx_0000c8_56x24_1bpp.h,found by chaining
+graphic,0x04a9a2,178,56,24,graphics/gfx_00017a_56x24_1bpp.png,found by chaining
+graphic-header,0x04a9a2,178,56,24,headers/gfx_00017a_56x24_1bpp.h,found by chaining
+graphic,0x04aa54,178,56,24,graphics/gfx_00022c_56x24_1bpp.png,found by chaining
+graphic-header,0x04aa54,178,56,24,headers/gfx_00022c_56x24_1bpp.h,found by chaining
+graphic,0x04ab06,178,56,24,graphics/gfx_0002de_56x24_1bpp.png,found by chaining
+graphic-header,0x04ab06,178,56,24,headers/gfx_0002de_56x24_1bpp.h,found by chaining
+graphic,0x04abb8,22,8,12,graphics/gfx_000390_8x12_1bpp.png,found by chaining
+graphic-header,0x04abb8,22,8,12,headers/gfx_000390_8x12_1bpp.h,found by chaining
+graphic,0x04abce,28,16,9,graphics/gfx_0003a6_16x9_1bpp.png,direct: DAT_00008334
+graphic-header,0x04abce,28,16,9,headers/gfx_0003a6_16x9_1bpp.h,direct: DAT_00008334
+graphic,0x04abea,40,24,10,graphics/gfx_0003c2_24x10_1bpp.png,run after 0x0003a6
+graphic-header,0x04abea,40,24,10,headers/gfx_0003c2_24x10_1bpp.h,run after 0x0003a6
+graphic,0x04ac12,40,24,10,graphics/gfx_0003ea_24x10_1bpp.png,run after 0x0003a6
+graphic-header,0x04ac12,40,24,10,headers/gfx_0003ea_24x10_1bpp.h,run after 0x0003a6
+graphic,0x04ac3a,40,24,10,graphics/gfx_000412_24x10_1bpp.png,run after 0x0003a6
+graphic-header,0x04ac3a,40,24,10,headers/gfx_000412_24x10_1bpp.h,run after 0x0003a6
+graphic,0x04ac62,40,24,10,graphics/gfx_00043a_24x10_1bpp.png,run after 0x0003a6
+graphic-header,0x04ac62,40,24,10,headers/gfx_00043a_24x10_1bpp.h,run after 0x0003a6
+graphic,0x04ac8a,40,24,10,graphics/gfx_000462_24x10_1bpp.png,run after 0x0003a6
+graphic-header,0x04ac8a,40,24,10,headers/gfx_000462_24x10_1bpp.h,run after 0x0003a6
+graphic,0x04acb2,32,16,11,graphics/gfx_00048a_16x11_1bpp.png,run after 0x0003a6
+graphic-header,0x04acb2,32,16,11,headers/gfx_00048a_16x11_1bpp.h,run after 0x0003a6
+graphic,0x04acd2,28,16,9,graphics/gfx_0004aa_16x9_1bpp.png,direct: DAT_0000831c
+graphic-header,0x04acd2,28,16,9,headers/gfx_0004aa_16x9_1bpp.h,direct: DAT_0000831c
+graphic,0x04acee,215,40,41,graphics/gfx_0004c6_40x41_1bpp.png,direct: DAT_000099a4
+graphic-header,0x04acee,215,40,41,headers/gfx_0004c6_40x41_1bpp.h,direct: DAT_000099a4
+graphic,0x04adc5,220,40,42,graphics/gfx_00059d_40x42_1bpp.png,run after 0x0004c6
+graphic-header,0x04adc5,220,40,42,headers/gfx_00059d_40x42_1bpp.h,run after 0x0004c6
+graphic,0x04aea1,126,32,29,graphics/gfx_000679_32x29_1bpp.png,run after 0x0004c6
+graphic-header,0x04aea1,126,32,29,headers/gfx_000679_32x29_1bpp.h,run after 0x0004c6
+graphic,0x04af1f,244,48,39,graphics/gfx_0006f7_48x39_1bpp.png,direct: DAT_000099c0
+graphic-header,0x04af1f,244,48,39,headers/gfx_0006f7_48x39_1bpp.h,direct: DAT_000099c0
+graphic,0x04b013,298,96,24,graphics/gfx_0007eb_96x24_1bpp.png,direct: DAT_00008e6c
+graphic-header,0x04b013,298,96,24,headers/gfx_0007eb_96x24_1bpp.h,direct: DAT_00008e6c
+graphic,0x04b13d,34,16,12,graphics/gfx_000915_16x12_1bpp.png,direct: DAT_00008e58
+graphic-header,0x04b13d,34,16,12,headers/gfx_000915_16x12_1bpp.h,direct: DAT_00008e58
+graphic,0x04b15f,48,16,19,graphics/gfx_000937_16x19_1bpp.png,direct: DAT_00008e54
+graphic-header,0x04b15f,48,16,19,headers/gfx_000937_16x19_1bpp.h,direct: DAT_00008e54
+graphic,0x04b18f,38,16,14,graphics/gfx_000967_16x14_1bpp.png,run after 0x000937
+graphic-header,0x04b18f,38,16,14,headers/gfx_000967_16x14_1bpp.h,run after 0x000937
+graphic,0x04b1b5,34,16,12,graphics/gfx_00098d_16x12_1bpp.png,direct: DAT_00008e4c
+graphic-header,0x04b1b5,34,16,12,headers/gfx_00098d_16x12_1bpp.h,direct: DAT_00008e4c
+graphic,0x04b1d7,36,16,13,graphics/gfx_0009af_16x13_1bpp.png,direct: DAT_00008e60
+graphic-header,0x04b1d7,36,16,13,headers/gfx_0009af_16x13_1bpp.h,direct: DAT_00008e60
+graphic,0x04b1fb,205,40,39,graphics/gfx_0009d3_40x39_1bpp.png,direct: DAT_00008cf8
+graphic-header,0x04b1fb,205,40,39,headers/gfx_0009d3_40x39_1bpp.h,direct: DAT_00008cf8
+graphic,0x04b2c8,50,16,20,graphics/gfx_000aa0_16x20_1bpp.png,run after 0x0009d3
+graphic-header,0x04b2c8,50,16,20,headers/gfx_000aa0_16x20_1bpp.h,run after 0x0009d3
+graphic,0x04b2fa,70,24,20,graphics/gfx_000ad2_24x20_1bpp.png,run after 0x0009d3
+graphic-header,0x04b2fa,70,24,20,headers/gfx_000ad2_24x20_1bpp.h,run after 0x0009d3
+graphic,0x04b340,142,32,33,graphics/gfx_000b18_32x33_1bpp.png,run after 0x0009d3
+graphic-header,0x04b340,142,32,33,headers/gfx_000b18_32x33_1bpp.h,run after 0x0009d3
+graphic,0x04b3ce,142,32,33,graphics/gfx_000ba6_32x33_1bpp.png,run after 0x0009d3
+graphic-header,0x04b3ce,142,32,33,headers/gfx_000ba6_32x33_1bpp.h,run after 0x0009d3
+graphic,0x04b45c,146,32,34,graphics/gfx_000c34_32x34_1bpp.png,run after 0x0009d3
+graphic-header,0x04b45c,146,32,34,headers/gfx_000c34_32x34_1bpp.h,run after 0x0009d3
+graphic,0x04b4ee,64,24,18,graphics/gfx_000cc6_24x18_1bpp.png,run after 0x0009d3
+graphic-header,0x04b4ee,64,24,18,headers/gfx_000cc6_24x18_1bpp.h,run after 0x0009d3
+graphic,0x04b52e,70,24,20,graphics/gfx_000d06_24x20_1bpp.png,run after 0x0009d3
+graphic-header,0x04b52e,70,24,20,headers/gfx_000d06_24x20_1bpp.h,run after 0x0009d3
+graphic,0x04b574,175,40,33,graphics/gfx_000d4c_40x33_1bpp.png,direct: DAT_00009150
+graphic-header,0x04b574,175,40,33,headers/gfx_000d4c_40x33_1bpp.h,direct: DAT_00009150
+graphic,0x04b623,70,24,20,graphics/gfx_000dfb_24x20_1bpp.png,run after 0x000d4c
+graphic-header,0x04b623,70,24,20,headers/gfx_000dfb_24x20_1bpp.h,run after 0x000d4c
+graphic,0x04b669,58,24,16,graphics/gfx_000e41_24x16_1bpp.png,run after 0x000d4c
+graphic-header,0x04b669,58,24,16,headers/gfx_000e41_24x16_1bpp.h,run after 0x000d4c
+graphic,0x04b6a3,58,24,16,graphics/gfx_000e7b_24x16_1bpp.png,run after 0x000d4c
+graphic-header,0x04b6a3,58,24,16,headers/gfx_000e7b_24x16_1bpp.h,run after 0x000d4c
+graphic,0x04b6dd,70,24,20,graphics/gfx_000eb5_24x20_1bpp.png,run after 0x000d4c
+graphic-header,0x04b6dd,70,24,20,headers/gfx_000eb5_24x20_1bpp.h,run after 0x000d4c
+graphic,0x04b723,18,8,8,graphics/gfx_000efb_8x8_1bpp.png,run after 0x000d4c
+graphic-header,0x04b723,18,8,8,headers/gfx_000efb_8x8_1bpp.h,run after 0x000d4c
+graphic,0x04b735,34,24,8,graphics/gfx_000f0d_24x8_1bpp.png,run after 0x000d4c
+graphic-header,0x04b735,34,24,8,headers/gfx_000f0d_24x8_1bpp.h,run after 0x000d4c
+graphic,0x04b757,34,24,8,graphics/gfx_000f2f_24x8_1bpp.png,run after 0x000d4c
+graphic-header,0x04b757,34,24,8,headers/gfx_000f2f_24x8_1bpp.h,run after 0x000d4c
+graphic,0x04b779,34,24,8,graphics/gfx_000f51_24x8_1bpp.png,run after 0x000d4c
+graphic-header,0x04b779,34,24,8,headers/gfx_000f51_24x8_1bpp.h,run after 0x000d4c
+graphic,0x04b79b,46,32,9,graphics/gfx_000f73_32x9_1bpp.png,run after 0x000d4c
+graphic-header,0x04b79b,46,32,9,headers/gfx_000f73_32x9_1bpp.h,run after 0x000d4c
+graphic,0x04b7c9,37,24,9,graphics/gfx_000fa1_24x9_1bpp.png,run after 0x000d4c
+graphic-header,0x04b7c9,37,24,9,headers/gfx_000fa1_24x9_1bpp.h,run after 0x000d4c
+graphic,0x04b7ee,22,8,12,graphics/gfx_000fc6_8x12_1bpp.png,run after 0x000d4c
+graphic-header,0x04b7ee,22,8,12,headers/gfx_000fc6_8x12_1bpp.h,run after 0x000d4c
+graphic,0x04b804,22,8,12,graphics/gfx_000fdc_8x12_1bpp.png,run after 0x000d4c
+graphic-header,0x04b804,22,8,12,headers/gfx_000fdc_8x12_1bpp.h,run after 0x000d4c
+graphic,0x04b81a,22,8,12,graphics/gfx_000ff2_8x12_1bpp.png,run after 0x000d4c
+graphic-header,0x04b81a,22,8,12,headers/gfx_000ff2_8x12_1bpp.h,run after 0x000d4c
+graphic,0x04b830,40,16,15,graphics/gfx_001008_16x15_1bpp.png,run after 0x000d4c
+graphic-header,0x04b830,40,16,15,headers/gfx_001008_16x15_1bpp.h,run after 0x000d4c
+graphic,0x04b858,40,16,15,graphics/gfx_001030_16x15_1bpp.png,run after 0x000d4c
+graphic-header,0x04b858,40,16,15,headers/gfx_001030_16x15_1bpp.h,run after 0x000d4c
+graphic,0x04b880,40,16,15,graphics/gfx_001058_16x15_1bpp.png,direct: PTR_PTR_00008d00
+graphic-header,0x04b880,40,16,15,headers/gfx_001058_16x15_1bpp.h,direct: PTR_PTR_00008d00
+graphic,0x04b8a8,120,40,22,graphics/gfx_001080_40x22_1bpp.png,run after 0x001058
+graphic-header,0x04b8a8,120,40,22,headers/gfx_001080_40x22_1bpp.h,run after 0x001058
+graphic,0x04b920,98,32,22,graphics/gfx_0010f8_32x22_1bpp.png,run after 0x001058
+graphic-header,0x04b920,98,32,22,headers/gfx_0010f8_32x22_1bpp.h,run after 0x001058
+graphic,0x04b982,54,16,22,graphics/gfx_00115a_16x22_1bpp.png,run after 0x001058
+graphic-header,0x04b982,54,16,22,headers/gfx_00115a_16x22_1bpp.h,run after 0x001058
+graphic,0x04b9b8,26,128,1,graphics/gfx_001190_128x1_1bpp.png,direct: PTR_FUN_000086c0
+graphic-header,0x04b9b8,26,128,1,headers/gfx_001190_128x1_1bpp.h,direct: PTR_FUN_000086c0
+graphic,0x04b9d2,70,48,10,graphics/gfx_0011aa_48x10_1bpp.png,run after 0x001190
+graphic-header,0x04b9d2,70,48,10,headers/gfx_0011aa_48x10_1bpp.h,run after 0x001190
+graphic,0x04ba18,50,40,8,graphics/gfx_0011f0_40x8_1bpp.png,run after 0x001190
+graphic-header,0x04ba18,50,40,8,headers/gfx_0011f0_40x8_1bpp.h,run after 0x001190
+graphic,0x04ba4a,50,40,8,graphics/gfx_001222_40x8_1bpp.png,run after 0x001190
+graphic-header,0x04ba4a,50,40,8,headers/gfx_001222_40x8_1bpp.h,run after 0x001190
+graphic,0x04ba7c,28,16,9,graphics/gfx_001254_16x9_1bpp.png,run after 0x001190
+graphic-header,0x04ba7c,28,16,9,headers/gfx_001254_16x9_1bpp.h,run after 0x001190
+graphic,0x04ba98,60,40,10,graphics/gfx_001270_40x10_1bpp.png,run after 0x001190
+graphic-header,0x04ba98,60,40,10,headers/gfx_001270_40x10_1bpp.h,run after 0x001190
+graphic,0x04bad4,34,24,8,graphics/gfx_0012ac_24x8_1bpp.png,run after 0x001190
+graphic-header,0x04bad4,34,24,8,headers/gfx_0012ac_24x8_1bpp.h,run after 0x001190
+graphic,0x04baf6,70,48,10,graphics/gfx_0012ce_48x10_1bpp.png,run after 0x001190
+graphic-header,0x04baf6,70,48,10,headers/gfx_0012ce_48x10_1bpp.h,run after 0x001190
+graphic,0x04bb3c,58,48,8,graphics/gfx_001314_48x8_1bpp.png,run after 0x001190
+graphic-header,0x04bb3c,58,48,8,headers/gfx_001314_48x8_1bpp.h,run after 0x001190
+graphic,0x04bb76,97,24,29,graphics/gfx_00134e_24x29_1bpp.png,run after 0x001190
+graphic-header,0x04bb76,97,24,29,headers/gfx_00134e_24x29_1bpp.h,run after 0x001190
+graphic,0x04bbd7,103,24,31,graphics/gfx_0013af_24x31_1bpp.png,run after 0x001190
+graphic-header,0x04bbd7,103,24,31,headers/gfx_0013af_24x31_1bpp.h,run after 0x001190
+graphic,0x04bc3e,50,16,20,graphics/gfx_001416_16x20_1bpp.png,run after 0x001190
+graphic-header,0x04bc3e,50,16,20,headers/gfx_001416_16x20_1bpp.h,run after 0x001190
+graphic,0x04bc70,118,32,27,graphics/gfx_001448_32x27_1bpp.png,direct: PTR_DAT_00008770
+graphic-header,0x04bc70,118,32,27,headers/gfx_001448_32x27_1bpp.h,direct: PTR_DAT_00008770
+graphic,0x04bce6,43,24,11,graphics/gfx_0014be_24x11_1bpp.png,run after 0x001448
+graphic-header,0x04bce6,43,24,11,headers/gfx_0014be_24x11_1bpp.h,run after 0x001448
+graphic,0x04bd11,43,24,11,graphics/gfx_0014e9_24x11_1bpp.png,run after 0x001448
+graphic-header,0x04bd11,43,24,11,headers/gfx_0014e9_24x11_1bpp.h,run after 0x001448
+graphic,0x04bd3c,43,24,11,graphics/gfx_001514_24x11_1bpp.png,run after 0x001448
+graphic-header,0x04bd3c,43,24,11,headers/gfx_001514_24x11_1bpp.h,run after 0x001448
+graphic,0x04bd67,43,24,11,graphics/gfx_00153f_24x11_1bpp.png,run after 0x001448
+graphic-header,0x04bd67,43,24,11,headers/gfx_00153f_24x11_1bpp.h,run after 0x001448
+graphic,0x04bd92,43,24,11,graphics/gfx_00156a_24x11_1bpp.png,run after 0x001448
+graphic-header,0x04bd92,43,24,11,headers/gfx_00156a_24x11_1bpp.h,run after 0x001448
+graphic,0x04bdbd,32,16,11,graphics/gfx_001595_16x11_1bpp.png,direct: DAT_00007c74
+graphic-header,0x04bdbd,32,16,11,headers/gfx_001595_16x11_1bpp.h,direct: DAT_00007c74
+graphic,0x04bddd,22,8,12,graphics/gfx_0015b5_8x12_1bpp.png,run after 0x001595
+graphic-header,0x04bddd,22,8,12,headers/gfx_0015b5_8x12_1bpp.h,run after 0x001595
+graphic,0x04bdf3,22,8,12,graphics/gfx_0015cb_8x12_1bpp.png,run after 0x001595
+graphic-header,0x04bdf3,22,8,12,headers/gfx_0015cb_8x12_1bpp.h,run after 0x001595
+graphic,0x04be09,22,8,12,graphics/gfx_0015e1_8x12_1bpp.png,run after 0x001595
+graphic-header,0x04be09,22,8,12,headers/gfx_0015e1_8x12_1bpp.h,run after 0x001595
+graphic,0x04be1f,22,8,12,graphics/gfx_0015f7_8x12_1bpp.png,run after 0x001595
+graphic-header,0x04be1f,22,8,12,headers/gfx_0015f7_8x12_1bpp.h,run after 0x001595
+graphic,0x04be35,22,8,12,graphics/gfx_00160d_8x12_1bpp.png,run after 0x001595
+graphic-header,0x04be35,22,8,12,headers/gfx_00160d_8x12_1bpp.h,run after 0x001595
+graphic,0x04be4b,22,8,12,graphics/gfx_001623_8x12_1bpp.png,run after 0x001595
+graphic-header,0x04be4b,22,8,12,headers/gfx_001623_8x12_1bpp.h,run after 0x001595
+graphic,0x04be61,22,8,12,graphics/gfx_001639_8x12_1bpp.png,run after 0x001595
+graphic-header,0x04be61,22,8,12,headers/gfx_001639_8x12_1bpp.h,run after 0x001595
+graphic,0x04be77,22,8,12,graphics/gfx_00164f_8x12_1bpp.png,run after 0x001595
+graphic-header,0x04be77,22,8,12,headers/gfx_00164f_8x12_1bpp.h,run after 0x001595
+graphic,0x04be8d,22,8,12,graphics/gfx_001665_8x12_1bpp.png,run after 0x001595
+graphic-header,0x04be8d,22,8,12,headers/gfx_001665_8x12_1bpp.h,run after 0x001595
+graphic,0x04bea3,22,8,12,graphics/gfx_00167b_8x12_1bpp.png,run after 0x001595
+graphic-header,0x04bea3,22,8,12,headers/gfx_00167b_8x12_1bpp.h,run after 0x001595
+graphic,0x04beb9,34,16,12,graphics/gfx_001691_16x12_1bpp.png,run after 0x001595
+graphic-header,0x04beb9,34,16,12,headers/gfx_001691_16x12_1bpp.h,run after 0x001595
+graphic,0x04bedb,22,8,12,graphics/gfx_0016b3_8x12_1bpp.png,run after 0x001595
+graphic-header,0x04bedb,22,8,12,headers/gfx_0016b3_8x12_1bpp.h,run after 0x001595
+graphic,0x04bef1,38,16,14,graphics/gfx_0016c9_16x14_1bpp.png,run after 0x001595
+graphic-header,0x04bef1,38,16,14,headers/gfx_0016c9_16x14_1bpp.h,run after 0x001595
+graphic,0x04bf17,38,16,14,graphics/gfx_0016ef_16x14_1bpp.png,run after 0x001595
+graphic-header,0x04bf17,38,16,14,headers/gfx_0016ef_16x14_1bpp.h,run after 0x001595
+graphic,0x04bf3d,38,16,14,graphics/gfx_001715_16x14_1bpp.png,run after 0x001595
+graphic-header,0x04bf3d,38,16,14,headers/gfx_001715_16x14_1bpp.h,run after 0x001595
+graphic,0x04bf63,38,16,14,graphics/gfx_00173b_16x14_1bpp.png,run after 0x001595
+graphic-header,0x04bf63,38,16,14,headers/gfx_00173b_16x14_1bpp.h,run after 0x001595
+graphic,0x04bf89,38,16,14,graphics/gfx_001761_16x14_1bpp.png,run after 0x001595
+graphic-header,0x04bf89,38,16,14,headers/gfx_001761_16x14_1bpp.h,run after 0x001595
+graphic,0x04bfaf,38,16,14,graphics/gfx_001787_16x14_1bpp.png,run after 0x001595
+graphic-header,0x04bfaf,38,16,14,headers/gfx_001787_16x14_1bpp.h,run after 0x001595
+graphic,0x04bfd5,38,16,14,graphics/gfx_0017ad_16x14_1bpp.png,run after 0x001595
+graphic-header,0x04bfd5,38,16,14,headers/gfx_0017ad_16x14_1bpp.h,run after 0x001595
+graphic,0x04bffb,38,16,14,graphics/gfx_0017d3_16x14_1bpp.png,run after 0x001595
+graphic-header,0x04bffb,38,16,14,headers/gfx_0017d3_16x14_1bpp.h,run after 0x001595
+graphic,0x04c021,38,16,14,graphics/gfx_0017f9_16x14_1bpp.png,run after 0x001595
+graphic-header,0x04c021,38,16,14,headers/gfx_0017f9_16x14_1bpp.h,run after 0x001595
+graphic,0x04c047,38,16,14,graphics/gfx_00181f_16x14_1bpp.png,run after 0x001595
+graphic-header,0x04c047,38,16,14,headers/gfx_00181f_16x14_1bpp.h,run after 0x001595
+graphic,0x04c06d,38,16,14,graphics/gfx_001845_16x14_1bpp.png,run after 0x001595
+graphic-header,0x04c06d,38,16,14,headers/gfx_001845_16x14_1bpp.h,run after 0x001595
+graphic,0x04c093,24,8,14,graphics/gfx_00186b_8x14_1bpp.png,run after 0x001595
+graphic-header,0x04c093,24,8,14,headers/gfx_00186b_8x14_1bpp.h,run after 0x001595
+graphic,0x04c0ab,38,16,14,graphics/gfx_001883_16x14_1bpp.png,run after 0x001595
+graphic-header,0x04c0ab,38,16,14,headers/gfx_001883_16x14_1bpp.h,run after 0x001595
+graphic,0x04c0d1,38,16,14,graphics/gfx_0018a9_16x14_1bpp.png,run after 0x001595
+graphic-header,0x04c0d1,38,16,14,headers/gfx_0018a9_16x14_1bpp.h,run after 0x001595
+graphic,0x04c0f7,22,8,12,graphics/gfx_0018cf_8x12_1bpp.png,run after 0x001595
+graphic-header,0x04c0f7,22,8,12,headers/gfx_0018cf_8x12_1bpp.h,run after 0x001595
+graphic,0x04c10d,22,8,12,graphics/gfx_0018e5_8x12_1bpp.png,run after 0x001595
+graphic-header,0x04c10d,22,8,12,headers/gfx_0018e5_8x12_1bpp.h,run after 0x001595
+graphic,0x04c123,22,8,12,graphics/gfx_0018fb_8x12_1bpp.png,run after 0x001595
+graphic-header,0x04c123,22,8,12,headers/gfx_0018fb_8x12_1bpp.h,run after 0x001595
+graphic,0x04c139,22,8,12,graphics/gfx_001911_8x12_1bpp.png,run after 0x001595
+graphic-header,0x04c139,22,8,12,headers/gfx_001911_8x12_1bpp.h,run after 0x001595
+graphic,0x04c14f,22,8,12,graphics/gfx_001927_8x12_1bpp.png,run after 0x001595
+graphic-header,0x04c14f,22,8,12,headers/gfx_001927_8x12_1bpp.h,run after 0x001595
+graphic,0x04c165,22,8,12,graphics/gfx_00193d_8x12_1bpp.png,run after 0x001595
+graphic-header,0x04c165,22,8,12,headers/gfx_00193d_8x12_1bpp.h,run after 0x001595
+graphic,0x04c17b,22,8,12,graphics/gfx_001953_8x12_1bpp.png,run after 0x001595
+graphic-header,0x04c17b,22,8,12,headers/gfx_001953_8x12_1bpp.h,run after 0x001595
+graphic,0x04c191,22,8,12,graphics/gfx_001969_8x12_1bpp.png,run after 0x001595
+graphic-header,0x04c191,22,8,12,headers/gfx_001969_8x12_1bpp.h,run after 0x001595
+graphic,0x04c1a7,22,8,12,graphics/gfx_00197f_8x12_1bpp.png,run after 0x001595
+graphic-header,0x04c1a7,22,8,12,headers/gfx_00197f_8x12_1bpp.h,run after 0x001595
+graphic,0x04c1bd,22,8,12,graphics/gfx_001995_8x12_1bpp.png,run after 0x001595
+graphic-header,0x04c1bd,22,8,12,headers/gfx_001995_8x12_1bpp.h,run after 0x001595
+graphic,0x04c1d3,22,8,12,graphics/gfx_0019ab_8x12_1bpp.png,direct: DAT_00008914
+graphic-header,0x04c1d3,22,8,12,headers/gfx_0019ab_8x12_1bpp.h,direct: DAT_00008914
+graphic,0x04c1e9,22,8,12,graphics/gfx_0019c1_8x12_1bpp.png,run after 0x0019ab
+graphic-header,0x04c1e9,22,8,12,headers/gfx_0019c1_8x12_1bpp.h,run after 0x0019ab
+graphic,0x04c1ff,22,8,12,graphics/gfx_0019d7_8x12_1bpp.png,run after 0x0019ab
+graphic-header,0x04c1ff,22,8,12,headers/gfx_0019d7_8x12_1bpp.h,run after 0x0019ab
+graphic,0x04c215,990,52,11,graphics/gfx_0019ed_52x11_8bpp.png,direct: DAT_00008ba8
+graphic-header,0x04c215,990,52,11,headers/gfx_0019ed_52x11_8bpp.h,direct: DAT_00008ba8
+graphic,0x04c5f3,884,107,4,graphics/gfx_001dcb_107x4_8bpp.png,run after 0x0019ed
+graphic-header,0x04c5f3,884,107,4,headers/gfx_001dcb_107x4_8bpp.h,run after 0x0019ed
+graphic,0x04c967,2720,126,18,graphics/gfx_00213f_126x18_8bpp.png,run after 0x0019ed
+graphic-header,0x04c967,2720,126,18,headers/gfx_00213f_126x18_8bpp.h,run after 0x0019ed
+graphic,0x04d407,860,107,4,graphics/gfx_002bdf_107x4_8bpp.png,run after 0x0019ed
+graphic-header,0x04d407,860,107,4,headers/gfx_002bdf_107x4_8bpp.h,run after 0x0019ed
+graphic,0x04d763,2814,128,21,graphics/gfx_002f3b_128x21_8bpp.png,run after 0x0019ed
+graphic-header,0x04d763,2814,128,21,headers/gfx_002f3b_128x21_8bpp.h,run after 0x0019ed
+graphic,0x04e261,2348,128,16,graphics/gfx_003a39_128x16_8bpp.png,run after 0x0019ed
+graphic-header,0x04e261,2348,128,16,headers/gfx_003a39_128x16_8bpp.h,run after 0x0019ed
+graphic,0x04eb8d,6918,80,80,graphics/gfx_004365_80x80_8bpp.png,run after 0x0019ed
+graphic-header,0x04eb8d,6918,80,80,headers/gfx_004365_80x80_8bpp.h,run after 0x0019ed
+graphic,0x050693,1842,120,15,graphics/gfx_005e6b_120x15_8bpp.png,run after 0x0019ed
+graphic-header,0x050693,1842,120,15,headers/gfx_005e6b_120x15_8bpp.h,run after 0x0019ed
+graphic,0x050dc5,2372,128,16,graphics/gfx_00659d_128x16_8bpp.png,run after 0x0019ed
+graphic-header,0x050dc5,2372,128,16,headers/gfx_00659d_128x16_8bpp.h,run after 0x0019ed
+graphic,0x051709,2394,128,17,graphics/gfx_006ee1_128x17_8bpp.png,run after 0x0019ed
+graphic-header,0x051709,2394,128,17,headers/gfx_006ee1_128x17_8bpp.h,run after 0x0019ed
+graphic,0x052063,2284,128,16,graphics/gfx_00783b_128x16_8bpp.png,run after 0x0019ed
+graphic-header,0x052063,2284,128,16,headers/gfx_00783b_128x16_8bpp.h,run after 0x0019ed
+graphic,0x05294f,2530,48,48,graphics/gfx_008127_48x48_8bpp.png,direct: DAT_00008e68
+graphic-header,0x05294f,2530,48,48,headers/gfx_008127_48x48_8bpp.h,direct: DAT_00008e68
+graphic,0x053331,112,8,12,graphics/gfx_008b09_8x12_8bpp.png,run after 0x008127
+graphic-header,0x053331,112,8,12,headers/gfx_008b09_8x12_8bpp.h,run after 0x008127
+graphic,0x0533a1,124,8,12,graphics/gfx_008b79_8x12_8bpp.png,run after 0x008127
+graphic-header,0x0533a1,124,8,12,headers/gfx_008b79_8x12_8bpp.h,run after 0x008127
+graphic,0x05341d,2988,128,21,graphics/gfx_008bf5_128x21_8bpp.png,run after 0x008127
+graphic-header,0x05341d,2988,128,21,headers/gfx_008bf5_128x21_8bpp.h,run after 0x008127
+graphic,0x053fc9,80,11,4,graphics/gfx_0097a1_11x4_8bpp.png,direct: DAT_00008fb4
+graphic-header,0x053fc9,80,11,4,headers/gfx_0097a1_11x4_8bpp.h,direct: DAT_00008fb4
+graphic,0x054019,342,19,16,graphics/gfx_0097f1_19x16_8bpp.png,run after 0x0097a1
+graphic-header,0x054019,342,19,16,headers/gfx_0097f1_19x16_8bpp.h,run after 0x0097a1
+graphic,0x05416f,346,19,16,graphics/gfx_009947_19x16_8bpp.png,run after 0x0097a1
+graphic-header,0x05416f,346,19,16,headers/gfx_009947_19x16_8bpp.h,run after 0x0097a1
+graphic,0x0542c9,270,128,2,graphics/gfx_009aa1_128x2_8bpp.png,run after 0x0097a1
+graphic-header,0x0542c9,270,128,2,headers/gfx_009aa1_128x2_8bpp.h,run after 0x0097a1
+graphic,0x0543d7,1714,28,43,graphics/gfx_009baf_28x43_8bpp.png,direct: DAT_00008bbc
+graphic-header,0x0543d7,1714,28,43,headers/gfx_009baf_28x43_8bpp.h,direct: DAT_00008bbc
+graphic,0x054a89,1112,54,11,graphics/gfx_00a261_54x11_8bpp.png,run after 0x009baf
+graphic-header,0x054a89,1112,54,11,headers/gfx_00a261_54x11_8bpp.h,run after 0x009baf
+graphic,0x054ee1,1268,30,25,graphics/gfx_00a6b9_30x25_8bpp.png,direct: DAT_00008bac
+graphic-header,0x054ee1,1268,30,25,headers/gfx_00a6b9_30x25_8bpp.h,direct: DAT_00008bac
+graphic,0x0553d5,302,34,6,graphics/gfx_00abad_34x6_8bpp.png,direct: DAT_00008bb8
+graphic-header,0x0553d5,302,34,6,headers/gfx_00abad_34x6_8bpp.h,direct: DAT_00008bb8
+graphic,0x055503,320,34,6,graphics/gfx_00acdb_34x6_8bpp.png,direct: DAT_00008bc0
+graphic-header,0x055503,320,34,6,headers/gfx_00acdb_34x6_8bpp.h,direct: DAT_00008bc0
+graphic,0x055643,324,34,6,graphics/gfx_00ae1b_34x6_8bpp.png,direct: DAT_00008bb0
+graphic-header,0x055643,324,34,6,headers/gfx_00ae1b_34x6_8bpp.h,direct: DAT_00008bb0
+graphic,0x055787,1758,31,40,graphics/gfx_00af5f_31x40_8bpp.png,direct: DAT_00008bb4
+graphic-header,0x055787,1758,31,40,headers/gfx_00af5f_31x40_8bpp.h,direct: DAT_00008bb4
+graphic,0x055e65,200,12,13,graphics/gfx_00b63d_12x13_8bpp.png,run after 0x00af5f
+graphic-header,0x055e65,200,12,13,headers/gfx_00b63d_12x13_8bpp.h,run after 0x00af5f
+graphic,0x055f2d,164,10,15,graphics/gfx_00b705_10x15_8bpp.png,run after 0x00af5f
+graphic-header,0x055f2d,164,10,15,headers/gfx_00b705_10x15_8bpp.h,run after 0x00af5f
+graphic,0x055fd1,178,10,15,graphics/gfx_00b7a9_10x15_8bpp.png,run after 0x00af5f
+graphic-header,0x055fd1,178,10,15,headers/gfx_00b7a9_10x15_8bpp.h,run after 0x00af5f
+graphic,0x056083,184,10,15,graphics/gfx_00b85b_10x15_8bpp.png,run after 0x00af5f
+graphic-header,0x056083,184,10,15,headers/gfx_00b85b_10x15_8bpp.h,run after 0x00af5f
+graphic,0x05613b,168,10,15,graphics/gfx_00b913_10x15_8bpp.png,run after 0x00af5f
+graphic-header,0x05613b,168,10,15,headers/gfx_00b913_10x15_8bpp.h,run after 0x00af5f
+graphic,0x0561e3,2455,35,59,graphics/gfx_00b9bb_35x59_8bpp.png,direct: DAT_00008304
+graphic-header,0x0561e3,2455,35,59,headers/gfx_00b9bb_35x59_8bpp.h,direct: DAT_00008304
+graphic,0x056b7a,840,34,20,graphics/gfx_00c352_34x20_8bpp.png,direct: DAT_00008308
+graphic-header,0x056b7a,840,34,20,headers/gfx_00c352_34x20_8bpp.h,direct: DAT_00008308
+graphic,0x056ec2,3899,49,69,graphics/gfx_00c69a_49x69_8bpp.png,direct: DAT_0000830c
+graphic-header,0x056ec2,3899,49,69,headers/gfx_00c69a_49x69_8bpp.h,direct: DAT_0000830c
+graphic,0x057dfd,676,18,27,graphics/gfx_00d5d5_18x27_8bpp.png,run after 0x00c69a
+graphic-header,0x057dfd,676,18,27,headers/gfx_00d5d5_18x27_8bpp.h,run after 0x00c69a
+graphic,0x0580a1,620,18,27,graphics/gfx_00d879_18x27_8bpp.png,run after 0x00c69a
+graphic-header,0x0580a1,620,18,27,headers/gfx_00d879_18x27_8bpp.h,run after 0x00c69a
+graphic,0x05830d,680,18,27,graphics/gfx_00dae5_18x27_8bpp.png,run after 0x00c69a
+graphic-header,0x05830d,680,18,27,headers/gfx_00dae5_18x27_8bpp.h,run after 0x00c69a
+graphic,0x0585b5,704,18,27,graphics/gfx_00dd8d_18x27_8bpp.png,run after 0x00c69a
+graphic-header,0x0585b5,704,18,27,headers/gfx_00dd8d_18x27_8bpp.h,run after 0x00c69a
+graphic,0x058875,672,18,27,graphics/gfx_00e04d_18x27_8bpp.png,run after 0x00c69a
+graphic-header,0x058875,672,18,27,headers/gfx_00e04d_18x27_8bpp.h,run after 0x00c69a
+graphic,0x058b15,686,18,27,graphics/gfx_00e2ed_18x27_8bpp.png,run after 0x00c69a
+graphic-header,0x058b15,686,18,27,headers/gfx_00e2ed_18x27_8bpp.h,run after 0x00c69a
+graphic,0x058dc3,688,18,27,graphics/gfx_00e59b_18x27_8bpp.png,run after 0x00c69a
+graphic-header,0x058dc3,688,18,27,headers/gfx_00e59b_18x27_8bpp.h,run after 0x00c69a
+graphic,0x059073,638,18,27,graphics/gfx_00e84b_18x27_8bpp.png,run after 0x00c69a
+graphic-header,0x059073,638,18,27,headers/gfx_00e84b_18x27_8bpp.h,run after 0x00c69a
+graphic,0x0592f1,724,18,27,graphics/gfx_00eac9_18x27_8bpp.png,run after 0x00c69a
+graphic-header,0x0592f1,724,18,27,headers/gfx_00eac9_18x27_8bpp.h,run after 0x00c69a
+graphic,0x0595c5,718,18,27,graphics/gfx_00ed9d_18x27_8bpp.png,run after 0x00c69a
+graphic-header,0x0595c5,718,18,27,headers/gfx_00ed9d_18x27_8bpp.h,run after 0x00c69a
+graphic,0x059893,280,8,27,graphics/gfx_00f06b_8x27_8bpp.png,direct: DAT_00008328
+graphic-header,0x059893,280,8,27,headers/gfx_00f06b_8x27_8bpp.h,direct: DAT_00008328
+graphic,0x0599ab,130,8,11,graphics/gfx_00f183_8x11_8bpp.png,run after 0x00f06b
+graphic-header,0x0599ab,130,8,11,headers/gfx_00f183_8x11_8bpp.h,run after 0x00f06b
+graphic,0x059a2d,114,8,11,graphics/gfx_00f205_8x11_8bpp.png,run after 0x00f06b
+graphic-header,0x059a2d,114,8,11,headers/gfx_00f205_8x11_8bpp.h,run after 0x00f06b
+graphic,0x059a9f,124,8,11,graphics/gfx_00f277_8x11_8bpp.png,run after 0x00f06b
+graphic-header,0x059a9f,124,8,11,headers/gfx_00f277_8x11_8bpp.h,run after 0x00f06b
+graphic,0x059b1b,126,8,11,graphics/gfx_00f2f3_8x11_8bpp.png,run after 0x00f06b
+graphic-header,0x059b1b,126,8,11,headers/gfx_00f2f3_8x11_8bpp.h,run after 0x00f06b
+graphic,0x059b99,126,8,11,graphics/gfx_00f371_8x11_8bpp.png,run after 0x00f06b
+graphic-header,0x059b99,126,8,11,headers/gfx_00f371_8x11_8bpp.h,run after 0x00f06b
+graphic,0x059c17,126,8,11,graphics/gfx_00f3ef_8x11_8bpp.png,run after 0x00f06b
+graphic-header,0x059c17,126,8,11,headers/gfx_00f3ef_8x11_8bpp.h,run after 0x00f06b
+graphic,0x059c95,126,8,11,graphics/gfx_00f46d_8x11_8bpp.png,run after 0x00f06b
+graphic-header,0x059c95,126,8,11,headers/gfx_00f46d_8x11_8bpp.h,run after 0x00f06b
+graphic,0x059d13,122,8,11,graphics/gfx_00f4eb_8x11_8bpp.png,run after 0x00f06b
+graphic-header,0x059d13,122,8,11,headers/gfx_00f4eb_8x11_8bpp.h,run after 0x00f06b
+graphic,0x059d8d,130,8,11,graphics/gfx_00f565_8x11_8bpp.png,run after 0x00f06b
+graphic-header,0x059d8d,130,8,11,headers/gfx_00f565_8x11_8bpp.h,run after 0x00f06b
+graphic,0x059e0f,128,8,11,graphics/gfx_00f5e7_8x11_8bpp.png,run after 0x00f06b
+graphic-header,0x059e0f,128,8,11,headers/gfx_00f5e7_8x11_8bpp.h,run after 0x00f06b
+graphic,0x059e8f,124,8,11,graphics/gfx_00f667_8x11_8bpp.png,direct: DAT_00008330
+graphic-header,0x059e8f,124,8,11,headers/gfx_00f667_8x11_8bpp.h,direct: DAT_00008330
+graphic,0x059f0b,383,31,11,graphics/gfx_00f6e3_31x11_8bpp.png,run after 0x00f667
+graphic-header,0x059f0b,383,31,11,headers/gfx_00f6e3_31x11_8bpp.h,run after 0x00f667
+graphic,0x05a08a,383,31,11,graphics/gfx_00f862_31x11_8bpp.png,run after 0x00f667
+graphic-header,0x05a08a,383,31,11,headers/gfx_00f862_31x11_8bpp.h,run after 0x00f667
+graphic,0x05a209,383,31,11,graphics/gfx_00f9e1_31x11_8bpp.png,run after 0x00f667
+graphic-header,0x05a209,383,31,11,headers/gfx_00f9e1_31x11_8bpp.h,run after 0x00f667
+graphic,0x05a388,383,31,11,graphics/gfx_00fb60_31x11_8bpp.png,run after 0x00f667
+graphic-header,0x05a388,383,31,11,headers/gfx_00fb60_31x11_8bpp.h,run after 0x00f667
+graphic,0x05a507,379,31,11,graphics/gfx_00fcdf_31x11_8bpp.png,run after 0x00f667
+graphic-header,0x05a507,379,31,11,headers/gfx_00fcdf_31x11_8bpp.h,run after 0x00f667
+graphic,0x05a682,379,31,11,graphics/gfx_00fe5a_31x11_8bpp.png,run after 0x00f667
+graphic-header,0x05a682,379,31,11,headers/gfx_00fe5a_31x11_8bpp.h,run after 0x00f667
+graphic,0x05a7fd,383,31,11,graphics/gfx_00ffd5_31x11_8bpp.png,run after 0x00f667
+graphic-header,0x05a7fd,383,31,11,headers/gfx_00ffd5_31x11_8bpp.h,run after 0x00f667
+graphic,0x05a97c,1586,35,34,graphics/gfx_010154_35x34_8bpp.png,direct: DAT_00008904
+graphic-header,0x05a97c,1586,35,34,headers/gfx_010154_35x34_8bpp.h,direct: DAT_00008904
+graphic,0x05afae,1550,35,34,graphics/gfx_010786_35x34_8bpp.png,direct: PTR_LAB_00008900
+graphic-header,0x05afae,1550,35,34,headers/gfx_010786_35x34_8bpp.h,direct: PTR_LAB_00008900
+graphic,0x05b5bc,524,32,15,graphics/gfx_010d94_32x15_8bpp.png,run after 0x010786
+graphic-header,0x05b5bc,524,32,15,headers/gfx_010d94_32x15_8bpp.h,run after 0x010786
+graphic,0x05b7c8,2445,47,41,graphics/gfx_010fa0_47x41_8bpp.png,direct: DAT_000088f8
+graphic-header,0x05b7c8,2445,47,41,headers/gfx_010fa0_47x41_8bpp.h,direct: DAT_000088f8
+graphic,0x05c155,2140,122,16,graphics/gfx_01192d_122x16_8bpp.png,direct: PTR_DAT_000088fc
+graphic-header,0x05c155,2140,122,16,headers/gfx_01192d_122x16_8bpp.h,direct: PTR_DAT_000088fc
+graphic,0x05c9b1,436,28,14,graphics/gfx_012189_28x14_8bpp.png,direct: PTR_DAT_00009680
+graphic-header,0x05c9b1,436,28,14,headers/gfx_012189_28x14_8bpp.h,direct: PTR_DAT_00009680
+graphic,0x05cb65,2646,56,38,graphics/gfx_01233d_56x38_8bpp.png,direct: PTR_DAT_0001233c_1_00009658
+graphic-header,0x05cb65,2646,56,38,headers/gfx_01233d_56x38_8bpp.h,direct: PTR_DAT_0001233c_1_00009658
+graphic,0x05d5bb,1614,35,34,graphics/gfx_012d93_35x34_8bpp.png,direct: DAT_00009668
+graphic-header,0x05d5bb,1614,35,34,headers/gfx_012d93_35x34_8bpp.h,direct: DAT_00009668
+graphic,0x05dc09,1630,35,34,graphics/gfx_0133e1_35x34_8bpp.png,direct: DAT_00009664
+graphic-header,0x05dc09,1630,35,34,headers/gfx_0133e1_35x34_8bpp.h,direct: DAT_00009664
+graphic,0x05e267,14442,118,118,graphics/gfx_013a3f_118x118_8bpp.png,direct: DAT_000079a4
+graphic-header,0x05e267,14442,118,118,headers/gfx_013a3f_118x118_8bpp.h,direct: DAT_000079a4
+graphic,0x061ad1,3002,46,54,graphics/gfx_0172a9_46x54_8bpp.png,direct: PTR_DAT_00007a6c
+graphic-header,0x061ad1,3002,46,54,headers/gfx_0172a9_46x54_8bpp.h,direct: PTR_DAT_00007a6c
+graphic,0x06268b,3002,46,54,graphics/gfx_017e63_46x54_8bpp.png,direct: PTR_DAT_000079e4
+graphic-header,0x06268b,3002,46,54,headers/gfx_017e63_46x54_8bpp.h,direct: PTR_DAT_000079e4
+graphic,0x063245,3002,46,54,graphics/gfx_018a1d_46x54_8bpp.png,direct: PTR_DAT_00007a28
+graphic-header,0x063245,3002,46,54,headers/gfx_018a1d_46x54_8bpp.h,direct: PTR_DAT_00007a28
+graphic,0x063dff,3002,46,54,graphics/gfx_0195d7_46x54_8bpp.png,direct: PTR_DAT_00007ab0
+graphic-header,0x063dff,3002,46,54,headers/gfx_0195d7_46x54_8bpp.h,direct: PTR_DAT_00007ab0
+graphic,0x0649b9,122,8,12,graphics/gfx_01a191_8x12_8bpp.png,run after 0x0195d7
+graphic-header,0x0649b9,122,8,12,headers/gfx_01a191_8x12_8bpp.h,run after 0x0195d7
+graphic,0x064a33,422,128,2,graphics/gfx_01a20b_128x2_8bpp.png,direct: PTR_DAT_00008ba4
+graphic-header,0x064a33,422,128,2,headers/gfx_01a20b_128x2_8bpp.h,direct: PTR_DAT_00008ba4
+graphic,0x064bd9,248,14,15,graphics/gfx_01a3b1_14x15_8bpp.png,run after 0x01a20b
+graphic-header,0x064bd9,248,14,15,headers/gfx_01a3b1_14x15_8bpp.h,run after 0x01a20b
+graphic,0x064cd1,250,14,15,graphics/gfx_01a4a9_14x15_8bpp.png,run after 0x01a20b
+graphic-header,0x064cd1,250,14,15,headers/gfx_01a4a9_14x15_8bpp.h,run after 0x01a20b
+graphic,0x064dcb,306,14,15,graphics/gfx_01a5a3_14x15_8bpp.png,run after 0x01a20b
+graphic-header,0x064dcb,306,14,15,headers/gfx_01a5a3_14x15_8bpp.h,run after 0x01a20b
+graphic,0x064efd,378,14,15,graphics/gfx_01a6d5_14x15_8bpp.png,run after 0x01a20b
+graphic-header,0x064efd,378,14,15,headers/gfx_01a6d5_14x15_8bpp.h,run after 0x01a20b
+graphic,0x065077,197,17,9,graphics/gfx_01a84f_17x9_8bpp.png,run after 0x01a20b
+graphic-header,0x065077,197,17,9,headers/gfx_01a84f_17x9_8bpp.h,run after 0x01a20b
+graphic,0x06513c,16544,128,128,graphics/gfx_01a914_128x128_8bpp.png,direct: PTR_DAT_00008024
+graphic-header,0x06513c,16544,128,128,headers/gfx_01a914_128x128_8bpp.h,direct: PTR_DAT_00008024
+graphic,0x0691dc,349,17,11,graphics/gfx_01e9b4_17x11_8bpp.png,direct: PTR_DAT_00007c64
+graphic-header,0x0691dc,349,17,11,headers/gfx_01e9b4_17x11_8bpp.h,direct: PTR_DAT_00007c64
+graphic,0x069339,236,22,10,graphics/gfx_01eb11_22x10_8bpp.png,run after 0x01e9b4
+graphic-header,0x069339,236,22,10,headers/gfx_01eb11_22x10_8bpp.h,run after 0x01e9b4
+graphic,0x069425,238,22,10,graphics/gfx_01ebfd_22x10_8bpp.png,run after 0x01e9b4
+graphic-header,0x069425,238,22,10,headers/gfx_01ebfd_22x10_8bpp.h,run after 0x01e9b4
+graphic,0x069513,238,22,10,graphics/gfx_01eceb_22x10_8bpp.png,run after 0x01e9b4
+graphic-header,0x069513,238,22,10,headers/gfx_01eceb_22x10_8bpp.h,run after 0x01e9b4
+graphic,0x069601,238,22,10,graphics/gfx_01edd9_22x10_8bpp.png,run after 0x01e9b4
+graphic-header,0x069601,238,22,10,headers/gfx_01edd9_22x10_8bpp.h,run after 0x01e9b4
+graphic,0x0696ef,238,22,10,graphics/gfx_01eec7_22x10_8bpp.png,run after 0x01e9b4
+graphic-header,0x0696ef,238,22,10,headers/gfx_01eec7_22x10_8bpp.h,run after 0x01e9b4
+graphic,0x0697dd,333,17,11,graphics/gfx_01efb5_17x11_8bpp.png,direct: PTR_DAT_00007c70
+graphic-header,0x0697dd,333,17,11,headers/gfx_01efb5_17x11_8bpp.h,direct: PTR_DAT_00007c70
+graphic,0x06992a,2424,44,46,graphics/gfx_01f102_44x46_8bpp.png,run after 0x01efb5
+graphic-header,0x06992a,2424,44,46,headers/gfx_01f102_44x46_8bpp.h,run after 0x01efb5
+graphic,0x06a2a2,2410,44,46,graphics/gfx_01fa7a_44x46_8bpp.png,run after 0x01efb5
+graphic-header,0x06a2a2,2410,44,46,headers/gfx_01fa7a_44x46_8bpp.h,run after 0x01efb5
+graphic,0x06ac0c,2412,44,46,graphics/gfx_0203e4_44x46_8bpp.png,run after 0x01efb5
+graphic-header,0x06ac0c,2412,44,46,headers/gfx_0203e4_44x46_8bpp.h,run after 0x01efb5
+graphic,0x06b578,2420,44,46,graphics/gfx_020d50_44x46_8bpp.png,run after 0x01efb5
+graphic-header,0x06b578,2420,44,46,headers/gfx_020d50_44x46_8bpp.h,run after 0x01efb5
+graphic,0x06beec,199,17,9,graphics/gfx_0216c4_17x9_8bpp.png,run after 0x01efb5
+graphic-header,0x06beec,199,17,9,headers/gfx_0216c4_17x9_8bpp.h,run after 0x01efb5
+graphic,0x06bfb3,132,8,12,graphics/gfx_02178b_8x12_8bpp.png,run after 0x01efb5
+graphic-header,0x06bfb3,132,8,12,headers/gfx_02178b_8x12_8bpp.h,run after 0x01efb5
+graphic,0x06c037,132,8,12,graphics/gfx_02180f_8x12_8bpp.png,run after 0x01efb5
+graphic-header,0x06c037,132,8,12,headers/gfx_02180f_8x12_8bpp.h,run after 0x01efb5
+graphic,0x06c0bb,134,8,12,graphics/gfx_021893_8x12_8bpp.png,run after 0x01efb5
+graphic-header,0x06c0bb,134,8,12,headers/gfx_021893_8x12_8bpp.h,run after 0x01efb5
+graphic,0x06c141,132,8,12,graphics/gfx_021919_8x12_8bpp.png,run after 0x01efb5
+graphic-header,0x06c141,132,8,12,headers/gfx_021919_8x12_8bpp.h,run after 0x01efb5
+graphic,0x06c1c5,136,8,12,graphics/gfx_02199d_8x12_8bpp.png,run after 0x01efb5
+graphic-header,0x06c1c5,136,8,12,headers/gfx_02199d_8x12_8bpp.h,run after 0x01efb5
+graphic,0x06c24d,134,8,12,graphics/gfx_021a25_8x12_8bpp.png,run after 0x01efb5
+graphic-header,0x06c24d,134,8,12,headers/gfx_021a25_8x12_8bpp.h,run after 0x01efb5
+graphic,0x06c2d3,132,8,12,graphics/gfx_021aab_8x12_8bpp.png,run after 0x01efb5
+graphic-header,0x06c2d3,132,8,12,headers/gfx_021aab_8x12_8bpp.h,run after 0x01efb5
+graphic,0x06c357,130,8,12,graphics/gfx_021b2f_8x12_8bpp.png,run after 0x01efb5
+graphic-header,0x06c357,130,8,12,headers/gfx_021b2f_8x12_8bpp.h,run after 0x01efb5
+graphic,0x06c3d9,130,8,12,graphics/gfx_021bb1_8x12_8bpp.png,run after 0x01efb5
+graphic-header,0x06c3d9,130,8,12,headers/gfx_021bb1_8x12_8bpp.h,run after 0x01efb5
+graphic,0x06c45b,132,8,12,graphics/gfx_021c33_8x12_8bpp.png,run after 0x01efb5
+graphic-header,0x06c45b,132,8,12,headers/gfx_021c33_8x12_8bpp.h,run after 0x01efb5
+graphic,0x06c4df,120,8,12,graphics/gfx_021cb7_8x12_8bpp.png,run after 0x01efb5
+graphic-header,0x06c4df,120,8,12,headers/gfx_021cb7_8x12_8bpp.h,run after 0x01efb5
+graphic,0x06c557,118,8,12,graphics/gfx_021d2f_8x12_8bpp.png,direct: DAT_00008034
+graphic-header,0x06c557,118,8,12,headers/gfx_021d2f_8x12_8bpp.h,direct: DAT_00008034
+graphic,0x06c5cd,122,8,12,graphics/gfx_021da5_8x12_8bpp.png,run after 0x021d2f
+graphic-header,0x06c5cd,122,8,12,headers/gfx_021da5_8x12_8bpp.h,run after 0x021d2f
+graphic,0x06c647,134,8,12,graphics/gfx_021e1f_8x12_8bpp.png,run after 0x021d2f
+graphic-header,0x06c647,134,8,12,headers/gfx_021e1f_8x12_8bpp.h,run after 0x021d2f
+graphic,0x06c6cd,478,16,27,graphics/gfx_021ea5_16x27_8bpp.png,run after 0x021d2f
+graphic-header,0x06c6cd,478,16,27,headers/gfx_021ea5_16x27_8bpp.h,run after 0x021d2f
+graphic,0x06c8ab,472,16,27,graphics/gfx_022083_16x27_8bpp.png,run after 0x021d2f
+graphic-header,0x06c8ab,472,16,27,headers/gfx_022083_16x27_8bpp.h,run after 0x021d2f
+graphic,0x06ca83,478,16,27,graphics/gfx_02225b_16x27_8bpp.png,run after 0x021d2f
+graphic-header,0x06ca83,478,16,27,headers/gfx_02225b_16x27_8bpp.h,run after 0x021d2f
+graphic,0x06cc61,478,16,27,graphics/gfx_022439_16x27_8bpp.png,run after 0x021d2f
+graphic-header,0x06cc61,478,16,27,headers/gfx_022439_16x27_8bpp.h,run after 0x021d2f
+graphic,0x06ce3f,474,16,27,graphics/gfx_022617_16x27_8bpp.png,run after 0x021d2f
+graphic-header,0x06ce3f,474,16,27,headers/gfx_022617_16x27_8bpp.h,run after 0x021d2f
+graphic,0x06d019,478,16,27,graphics/gfx_0227f1_16x27_8bpp.png,run after 0x021d2f
+graphic-header,0x06d019,478,16,27,headers/gfx_0227f1_16x27_8bpp.h,run after 0x021d2f
+graphic,0x06d1f7,478,16,27,graphics/gfx_0229cf_16x27_8bpp.png,run after 0x021d2f
+graphic-header,0x06d1f7,478,16,27,headers/gfx_0229cf_16x27_8bpp.h,run after 0x021d2f
+graphic,0x06d3d5,472,16,27,graphics/gfx_022bad_16x27_8bpp.png,run after 0x021d2f
+graphic-header,0x06d3d5,472,16,27,headers/gfx_022bad_16x27_8bpp.h,run after 0x021d2f
+graphic,0x06d5ad,478,16,27,graphics/gfx_022d85_16x27_8bpp.png,run after 0x021d2f
+graphic-header,0x06d5ad,478,16,27,headers/gfx_022d85_16x27_8bpp.h,run after 0x021d2f
+graphic,0x06d78b,478,16,27,graphics/gfx_022f63_16x27_8bpp.png,run after 0x021d2f
+graphic-header,0x06d78b,478,16,27,headers/gfx_022f63_16x27_8bpp.h,run after 0x021d2f
+graphic,0x06d969,466,16,27,graphics/gfx_023141_16x27_8bpp.png,direct: DAT_0000802c
+graphic-header,0x06d969,466,16,27,headers/gfx_023141_16x27_8bpp.h,direct: DAT_0000802c
+graphic,0x06db3b,322,28,10,graphics/gfx_023313_28x10_8bpp.png,run after 0x023141
+graphic-header,0x06db3b,322,28,10,headers/gfx_023313_28x10_8bpp.h,run after 0x023141
+graphic,0x06dc7d,326,28,10,graphics/gfx_023455_28x10_8bpp.png,run after 0x023141
+graphic-header,0x06dc7d,326,28,10,headers/gfx_023455_28x10_8bpp.h,run after 0x023141
+graphic,0x06ddc3,326,28,10,graphics/gfx_02359b_28x10_8bpp.png,run after 0x023141
+graphic-header,0x06ddc3,326,28,10,headers/gfx_02359b_28x10_8bpp.h,run after 0x023141
+graphic,0x06df09,326,28,10,graphics/gfx_0236e1_28x10_8bpp.png,run after 0x023141
+graphic-header,0x06df09,326,28,10,headers/gfx_0236e1_28x10_8bpp.h,run after 0x023141
+graphic,0x06e04f,320,28,10,graphics/gfx_023827_28x10_8bpp.png,run after 0x023141
+graphic-header,0x06e04f,320,28,10,headers/gfx_023827_28x10_8bpp.h,run after 0x023141
+graphic,0x06e18f,324,28,10,graphics/gfx_023967_28x10_8bpp.png,run after 0x023141
+graphic-header,0x06e18f,324,28,10,headers/gfx_023967_28x10_8bpp.h,run after 0x023141
+graphic,0x06e2d3,326,28,10,graphics/gfx_023aab_28x10_8bpp.png,run after 0x023141
+graphic-header,0x06e2d3,326,28,10,headers/gfx_023aab_28x10_8bpp.h,run after 0x023141
+graphic,0x06e419,302,14,12,graphics/gfx_023bf1_14x12_8bpp.png,direct: PTR_DAT_00008044
+graphic-header,0x06e419,302,14,12,headers/gfx_023bf1_14x12_8bpp.h,direct: PTR_DAT_00008044
+graphic,0x06e547,5653,79,65,graphics/gfx_023d1f_79x65_8bpp.png,direct: PTR_DAT_00008310
+graphic-header,0x06e547,5653,79,65,headers/gfx_023d1f_79x65_8bpp.h,direct: PTR_DAT_00008310
+graphic,0x06fb5c,168,10,15,graphics/gfx_025334_10x15_8bpp.png,direct: DAT_00008fbc
+graphic-header,0x06fb5c,168,10,15,headers/gfx_025334_10x15_8bpp.h,direct: DAT_00008fbc
+graphic-set,0x0599ab,11,8,11,graphics/sets/set_8x11_8bpp_x11.png,11 records sharing this size
+graphic-set,0x04a828,29,8,12,graphics/sets/set_8x12_1bpp_x29.png,29 records sharing this size
+graphic-set,0x053331,17,8,12,graphics/sets/set_8x12_8bpp_x17.png,17 records sharing this size
+graphic-set,0x055f2d,5,10,15,graphics/sets/set_10x15_8bpp_x5.png,5 records sharing this size
+graphic-set,0x064bd9,4,14,15,graphics/sets/set_14x15_8bpp_x4.png,4 records sharing this size
+graphic-set,0x04abce,3,16,9,graphics/sets/set_16x9_1bpp_x3.png,3 records sharing this size
+graphic-set,0x04acb2,2,16,11,graphics/sets/set_16x11_1bpp_x2.png,2 records sharing this size
+graphic-set,0x04b13d,3,16,12,graphics/sets/set_16x12_1bpp_x3.png,3 records sharing this size
+graphic-set,0x04b18f,14,16,14,graphics/sets/set_16x14_1bpp_x14.png,14 records sharing this size
+graphic-set,0x04b830,3,16,15,graphics/sets/set_16x15_1bpp_x3.png,3 records sharing this size
+graphic-set,0x04b2c8,2,16,20,graphics/sets/set_16x20_1bpp_x2.png,2 records sharing this size
+graphic-set,0x06c6cd,11,16,27,graphics/sets/set_16x27_8bpp_x11.png,11 records sharing this size
+graphic-set,0x065077,2,17,9,graphics/sets/set_17x9_8bpp_x2.png,2 records sharing this size
+graphic-set,0x0691dc,2,17,11,graphics/sets/set_17x11_8bpp_x2.png,2 records sharing this size
+graphic-set,0x057dfd,10,18,27,graphics/sets/set_18x27_8bpp_x10.png,10 records sharing this size
+graphic-set,0x054019,2,19,16,graphics/sets/set_19x16_8bpp_x2.png,2 records sharing this size
+graphic-set,0x069339,5,22,10,graphics/sets/set_22x10_8bpp_x5.png,5 records sharing this size
+graphic-set,0x04b735,4,24,8,graphics/sets/set_24x8_1bpp_x4.png,4 records sharing this size
+graphic-set,0x04abea,5,24,10,graphics/sets/set_24x10_1bpp_x5.png,5 records sharing this size
+graphic-set,0x04bce6,5,24,11,graphics/sets/set_24x11_1bpp_x5.png,5 records sharing this size
+graphic-set,0x04b669,2,24,16,graphics/sets/set_24x16_1bpp_x2.png,2 records sharing this size
+graphic-set,0x04b2fa,4,24,20,graphics/sets/set_24x20_1bpp_x4.png,4 records sharing this size
+graphic-set,0x06db3b,7,28,10,graphics/sets/set_28x10_8bpp_x7.png,7 records sharing this size
+graphic-set,0x059f0b,7,31,11,graphics/sets/set_31x11_8bpp_x7.png,7 records sharing this size
+graphic-set,0x04b340,2,32,33,graphics/sets/set_32x33_1bpp_x2.png,2 records sharing this size
+graphic-set,0x0553d5,3,34,6,graphics/sets/set_34x6_8bpp_x3.png,3 records sharing this size
+graphic-set,0x05a97c,4,35,34,graphics/sets/set_35x34_8bpp_x4.png,4 records sharing this size
+graphic-set,0x04ba18,2,40,8,graphics/sets/set_40x8_1bpp_x2.png,2 records sharing this size
+graphic-set,0x06992a,4,44,46,graphics/sets/set_44x46_8bpp_x4.png,4 records sharing this size
+graphic-set,0x061ad1,4,46,54,graphics/sets/set_46x54_8bpp_x4.png,4 records sharing this size
+graphic-set,0x04b9d2,2,48,10,graphics/sets/set_48x10_1bpp_x2.png,2 records sharing this size
+graphic-set,0x04a83e,5,56,24,graphics/sets/set_56x24_1bpp_x5.png,5 records sharing this size
+graphic-set,0x04c5f3,2,107,4,graphics/sets/set_107x4_8bpp_x2.png,2 records sharing this size
+graphic-set,0x0542c9,2,128,2,graphics/sets/set_128x2_8bpp_x2.png,2 records sharing this size
+graphic-set,0x04e261,3,128,16,graphics/sets/set_128x16_8bpp_x3.png,3 records sharing this size
+graphic-set,0x04d763,2,128,21,graphics/sets/set_128x21_8bpp_x2.png,2 records sharing this size

@@ -1,0 +1,79 @@
+# language 0, table at 0x044200, magic 0xbeef
+  0  Steps
+  1  Heart rate
+  2  Sports
+  3  Running
+  4  Situp
+  5  Skipping
+  6  Bike riding
+  7  Camera
+  8  Stopwatch
+  9  Looking for
+ 10  Reset
+ 11  Message
+ 12  Qr code
+ 13  More
+ 14  AM
+ 15  PM
+ 16  Mon
+ 17  Tue
+ 18  Wed
+ 19  Thur
+ 20  Fri
+ 21  Sat
+ 22  Sun
+ 23  KM
+ 24  Mile
+ 25  Kcal
+ 26  Power down
+ 27  Unbundle
+ 28  Null...
+ 29  Download
+ 30  Theme
+ 31  Time
+ 32  Music
+ 33  Sleep
+ 34  Weather
+ 35  Return
+ 36  Long press
+ 37  Low battery
+ 38  简体中文
+ 39  计步
+ 40  心率
+ 41  多运动
+ 42  跑步
+ 43  仰卧起坐
+ 44  跳绳
+ 45  骑行
+ 46  照相
+ 47  秒表
+ 48  寻找
+ 49  重置
+ 50  信息
+ 51  二维码
+ 52  更多
+ 53  上午
+ 54  下午
+ 55  周一
+ 56  周二
+ 57  周三
+ 58  周四
+ 59  周五
+ 60  周六
+ 61  周日
+ 62  公里
+ 63  英里
+ 64  千卡
+ 65  关机
+ 66  解绑
+ 67  空白...
+ 68  下载应用程序
+ 69  主题
+ 70  时间
+ 71  音乐控制
+ 72  睡眠监测
+ 73  天气
+ 74  返回
+ 75  长按
+ 76  低电量
+ 77  荷兰语

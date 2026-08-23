@@ -1,0 +1,79 @@
+# language 5, table at 0x048b20, magic 0xbeef
+  0  Mengira langkah
+  1  Kadar degupan jantung
+  2  Sukan
+  3  Berjalan
+  4  Duduk naik
+  5  Melangkau tali
+  6  Ride
+  7  Ambil gambar
+  8  Jam randik
+  9  Mencari
+ 10  Tetapkan semula
+ 11  Maklumat
+ 12  Kod QR
+ 13  Lebih banyak
+ 14  Pagi
+ 15  Petang
+ 16  Isnin
+ 17  Selasa
+ 18  Rabu
+ 19  Khamis
+ 20  Jumaat
+ 21  Sabtu
+ 22  Ahad
+ 23  Km
+ 24  Miles
+ 25  Kalori
+ 26  Tutup
+ 27  Untie
+ 28  Kosong...
+ 29  Muat turun Aplikasi
+ 30  Tema
+ 31  masa
+ 32  Muzik
+ 33  Tidur
+ 34  Cuaca
+ 35  kembali
+ 36  tekan lama
+ 37  bateri lemah
+ 38  捷克
+ 39  Počítání kroků
+ 40  Tepová frekvence
+ 41  Sportovní
+ 42  Běh
+ 43  Posaďte se
+ 44  Švihadlo
+ 45  Jízda
+ 46  Vyfoťte
+ 47  Stopky
+ 48  Hledat
+ 49  Reset
+ 50  Informace
+ 51  QR kód
+ 52  Více
+ 53  Ráno
+ 54  Odpoledne
+ 55  Pondělí
+ 56  Úterý
+ 57  Středa
+ 58  Čtvrtek
+ 59  Pátek
+ 60  Sobota
+ 61  Neděle
+ 62  Km
+ 63  Miles
+ 64  Kalorie
+ 65  Vypněte
+ 66  Untie
+ 67  Prázdné...
+ 68  Stáhnout aplikaci
+ 69  Téma
+ 70  čas
+ 71  Hudba
+ 72  Spát
+ 73  Počasí
+ 74  vrátit se
+ 75  dlouhé stisknutí
+ 76  slabá baterie
+ 77  斯洛伐克
