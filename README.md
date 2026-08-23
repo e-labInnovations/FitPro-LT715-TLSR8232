@@ -101,8 +101,24 @@ out of pin sweeps: see [Reading the pins out of the firmware](#reading-the-pins-
 > on an even/odd counter and stops once the counter passes a limit of 4, 8 or
 > 0x18 — three buzz patterns chosen by alert type. The BLE command handler at
 > `FUN_0000216c` clears the same bit when the app cancels, and three further
-> functions only ever clear it. Driver: [lib/vibrate/](lib/vibrate/), confirmed
-> on hardware by [examples/vibrate/](examples/vibrate/).
+> functions only ever clear it. The toggle interval is a constant `0x493e0`
+> compared as `<< 4` against the system tick at `0x800740`, i.e. a **300 ms half
+> period**. Driver: [lib/vibrate/](lib/vibrate/), confirmed on hardware by
+> [examples/vibrate/](examples/vibrate/) and [examples/vib_pa5/](examples/vib_pa5/).
+
+> #### ⚠️ The motor only runs on battery power
+>
+> `examples/vibrate` appeared to do nothing for a while: the screen cycled
+> through SHORT/MEDIUM/LONG but the motor never moved. The firmware was right
+> the whole time — the board was on an external 3.3 V supply. A vibrator pulls
+> tens of milliamps in an inrush the bench supply and the on-board LDO path will
+> not deliver, so the motor sits still while every GPIO reads correct. Reconnect
+> the LiPo and the same unmodified binary buzzes.
+>
+> This applies to any current-hungry load, so **test motors, backlight brightness
+> and radio transmit on the battery**, never on 3V3 alone. It also explains why
+> [examples/vib_probe/](examples/vib_probe/) insists on the LiPo: on a stiff
+> supply the battery-sag column stays at zero no matter which pin is right.
 
 ### UART Debug (FPC pads)
 
@@ -122,8 +138,10 @@ out of pin sweeps: see [Reading the pins out of the firmware](#reading-the-pins-
 
 ### Other Peripherals (not yet mapped)
 
-> Vibrator, heart rate sensor, buttons, accelerometer — GPIO assignments unknown.
-> ADC scan hinted PB2/PB5 may carry HR sensor signals but not confirmed.
+> Heart rate sensor and accelerometer — GPIO assignments unknown. PA4 is an
+> interrupt input and is the strongest accelerometer candidate (see *Reading the
+> pins out of the firmware*). ADC scan hinted PB2/PB5 may carry HR sensor signals
+> but not confirmed. The vibrator (PA5) and touch key (PC2) are now mapped.
 
 ---
 
@@ -165,6 +183,11 @@ Screen columns are `PIN  C  L  CNT`. A row latches yellow on its first edge, so 
 single quick tap is never lost between redraws.
 
 ### 2. `vib_hunt` — vibrator motor
+
+> **On the battery, always.** `vib_hunt` and `vib_sweep` both missed PA5 while
+> the watch was on an external 3.3 V supply — the pin was driven correctly and
+> the motor simply could not draw enough current to turn. See *If the motor never
+> shows up*.
 
 ```bash
 docker run --rm -v $(pwd):/src -w /src/examples/vib_hunt -it tlsr8232-sdk make
@@ -297,9 +320,14 @@ every column stays at zero.
 
 ### If the motor never shows up
 
-Worth confirming the motor works at all before trusting any negative result:
-bridge its two pads to 3V3 through ~100 Ω by hand. If it does not spin, no
-firmware sweep ever will.
+**Check the power source first.** This is what actually happened here: `vib_hunt`
+and `vib_sweep` drove the right pin, PA5, and reported nothing — the watch was
+running off an external 3.3 V supply, which cannot deliver the motor's inrush.
+Every GPIO read correct and the rotor never moved. On the LiPo, the same
+binaries buzz. A negative sweep result on bench power means nothing at all.
+
+Then confirm the motor works: bridge its two pads to 3V3 through ~100 Ω by hand.
+If it does not spin, no firmware sweep ever will.
 
 Failing that, the multimeter route is quicker than more sweeps. The motor is
 driven by a small transistor next to it (SOT-23/SOT-323, usually with a flyback
@@ -405,9 +433,48 @@ The route that does work is Ghidra with a TC32 processor module, which is what
   scan confirms the registers are referenced individually — `PA_OEN` and
   `PA_OUT` 15 times each, `PC_OEN`/`PC_OUT` 10 each, `PB` only 4/3.
 
-Expect readable disassembly and identifiable functions rather than clean C: the
-decompiler is only as good as the processor module's pcode, and TC32 modules are
-community-built.
+### Decompiling the whole image to C
+
+Yes — the whole image, not just the parts you have questions about.
+`DecompAll.java` walks every defined function and writes its decompiled body to
+one file:
+
+```bash
+export JAVA_HOME=/path/to/jdk21     # Ghidra 12 needs 21+
+ghidra/support/analyzeHeadless <project-dir> LT715_RE \
+  -process "LT716_V10712*" -noanalysis \
+  -scriptPath ghidra_project -postScript DecompAll.java
+# writes /tmp/firmware_decomp.c
+```
+
+The result is checked in:
+[ghidra_project/decompiled/LT716_V10712_211091429.c](ghidra_project/decompiled/LT716_V10712_211091429.c)
+— **1039 of 1040 functions, 33 000 lines**, one decompile failure (a `pcode
+error` at `0x16608`, a single unresolved constructor in the TC32 module).
+
+Be clear about what that file is and is not:
+
+- It **is** real C, per function, with control flow, loops and arithmetic
+  recovered, and it is searchable — which is how the vibrator, the tick source
+  and the buzz timing were all found in minutes instead of hours.
+- It is **not** buildable source. There are no symbol names (`FUN_0000cdc4`), no
+  types, no struct layouts, and every hardware register appears as a store
+  through an opaque pointer (`*PTR_DAT_0000ceb4 = ... | 0x20`) because the
+  register space is not part of the image. Global variables are addresses.
+- Getting from there to source you could compile means naming things and
+  rebuilding the types by hand, function by function. Practical for a subsystem
+  you care about; a large project for 1040 functions.
+
+So the workflow that pays off is not "decompile everything and read it" but
+"decompile everything, then grep it": find the register write, follow it to the
+task, follow the task to its caller, and name only that path. A helper for
+pulling one function out of the dump:
+
+```bash
+awk -v n=FUN_0000cdc4 '$0 ~ "^/\\* ======== "n" @" {p=1}
+  p && /^\/\* ======== / && $0 !~ "^/\\* ======== "n" @" {exit} p' \
+  ghidra_project/decompiled/LT716_V10712_211091429.c
+```
 
 ### Using the tool
 
@@ -427,27 +494,75 @@ python3 tools/fwtool.py $FW atlas out.png --cjk --count 96 --cols 24
 The pin sweeps never found the motor. Decompiling the stock firmware did, in one
 sitting — and it turns out **Ghidra 12 ships a `Telink_TC32` processor module**,
 so no community plugin is needed. Disassembly of the main application yields
-34 729 instructions and 880 functions, and the decompiler produces clean C.
+34 729 instructions, and analysis of the full image finds 1040 functions — the
+decompiler produces clean C for 1039 of them.
 
 The scripts are in [ghidra_project/](ghidra_project/):
 
 | Script | What it does |
 | ------ | ------------ |
-| `GpioRefs.java` | finds literal-pool words holding a GPIO register address, follows references back to code, prints disassembly + C |
-| `GpioPins.java` | turns those accesses into pin names, decoding `\| 0x20` and `& 0xdf` style masks into bits |
-| `DumpFuncs.java` | full decompilation of named entry points, with callers and callees |
+| `SetupBlocks.java` | run as `-preScript` on import: adds the register and SRAM blocks, marks both KNLT entry points |
+| `GpioMapAll.java` | one table of every GPIO access in the image — function → registers → pin bits |
+| `GpioRefs.java` | same idea for one port, but prints the disassembly window and C for each hit |
+| `Pa5Sites.java` | disassembly around every PA access, flagging bit-5 masks — how the motor pin was pinned down |
+| `DecompAll.java` | decompiles every function to one C file (see above) |
+| `GpioPins.java`, `DumpFuncs.java` | earlier, narrower versions of the above |
 
-Headless run, with the code-only slice so the fonts and bitmaps are not
-disassembled into noise:
+Import and analyse the **whole** verified image, not a code-only slice:
 
 ```bash
 export JAVA_HOME=/path/to/jdk21
-dd if=LT716_V10712_211091429.bin of=main.bin bs=1 count=108708   # 0x1a8a4
-ghidra/support/analyzeHeadless ~/work proj -import main.bin \
-  -loader BinaryLoader -loader-baseAddr 0x0 \
+FW=binaries/stock/LT716_V10712_211091429.bin
+ghidra/support/analyzeHeadless $PWD/ghidra_project LT715_RE -import $PWD/$FW \
   -processor "Telink_TC32:LE:16:default" \
-  -scriptPath ~/ghidra_scripts -postScript GpioPins.java
+  -loader BinaryLoader -loader-baseAddr 0x0 \
+  -scriptPath $PWD/ghidra_project -preScript SetupBlocks.java
 ```
+
+Then any analysis script against that program:
+
+```bash
+ghidra/support/analyzeHeadless $PWD/ghidra_project LT715_RE \
+  -process "LT716_V10712*" -noanalysis \
+  -scriptPath $PWD/ghidra_project -postScript GpioMapAll.java
+```
+
+`GpioMapAll.java` prints the entire pin map in one pass — 81 register literals,
+107 references, 41 functions:
+
+```
+FUN_0000cdc4@0000cdc4   {PA_OUT[bit5/0,1]=1, PA_OUT[bit5]=3}      <- vibrator
+FUN_00005958@00005958   {PB_OUT[bit3/0,4]=1, PB_OUT[bit3]=1}      <- backlight
+FUN_000061a8@000061a8   {PA_OEN[bit1]=1, PA_OUT[bit1]=2, ...}     <- LCD CS
+FUN_000066e8@000066e8   {PA_OEN[bit4]=1, PA_POL[bit4]=1}          <- IRQ input
+FUN_0000c37c@0000c37c   {PB_OUT[bit5/0]=2, PB_OUT[bit5]=1}        <- PB5, purpose unclear
+FUN_0000ed4c@0000ed4c   {PA_OEN[...], PA_DS[...], PA_FUNC[...]}   <- bulk init, ignore
+```
+
+#### ⚠️ Two setup mistakes that waste a day
+
+Both of these were live in this repo's Ghidra project until they were caught, and
+both produce analysis that looks completely plausible:
+
+- **Import at base 0, not `0x20000000`.** TC32 fetches from flash mapped at 0, so
+  the image belongs there. With the image at `0x20000000`, every code pointer
+  stored *inside* the image still reads `0x0000xxxx` and resolves to nothing, so
+  cross-references silently vanish. `SetupBlocks.java` also has to create the
+  register space (`0x800000`) and SRAM (`0x840000`) as uninitialized blocks
+  before analysis, or the GPIO literals point into a hole.
+- **Check which file the database was actually built from.** This project's
+  original database was imported from an early, corrupt dump — `md5
+  f36a2b58…`, not the verified `a52d9e46…`. Same KNLT header, same 787 decodable
+  functions, and the vibrator conclusion happened to survive; other offsets did
+  not. Verify with:
+
+  ```java
+  println(currentProgram.getExecutableMD5());   // compare against md5sum of your dump
+  ```
+
+  Any conclusion drawn from a database built on an unverified dump has to be
+  re-derived after re-importing the good one. See *What the older, deleted dumps
+  taught us*.
 
 ### Why the sweeps missed it
 
@@ -467,7 +582,7 @@ What is left is short and unambiguous:
 
 | Pin | Evidence | Conclusion |
 | --- | -------- | ---------- |
-| PA5 | `\| 0x20` / `& 0xdf` in four functions, one of them a toggle-counter with limits 4/8/0x18 | vibrator motor |
+| PA5 | `\| 0x20` / `& 0xdf` in four functions, one of them a toggle-counter with limits 4/8/0x18 | **vibrator motor — confirmed on hardware** (on battery; see the warning under *Vibrator Motor*) |
 | PA4 | `FUN_000066e8` sets FUNC/IE, disables the output driver, clears POL, sets an interrupt-enable bit and registers a handler | interrupt input, probably the accelerometer |
 | PB5 | `FUN_0000c37c` drives it high/low against a timeout | driven output in stock firmware, purpose unclear — so the "UART RX pad" label is an assumption, not a measurement |
 | PA3, PB2, PC4 | bulk init only | probably unused |
@@ -695,6 +810,7 @@ before trusting or flashing it.
 │   ├── touch_key/          # PC2 touch key characterisation + logic trace
 │   ├── touch_demo/         # Touch driver demo: tap / double tap / long press
 │   ├── vibrate/            # Vibrator motor patterns on PA5
+│   ├── vib_pa5/            # PA5 frequency sweep, scored by battery sag
 │   ├── uart/               # UART debug output
 │   ├── ble_adv/            # BLE advertising
 │   └── blink/              # Backlight blink
@@ -705,8 +821,11 @@ before trusting or flashing it.
 │   ├── touch/              # PC2 touch key driver (debounce, tap/long/double)
 │   ├── vibrate/            # PA5 vibrator motor driver
 │   └── uart/               # UART helper
+├── ghidra_project/         # Ghidra database + analysis scripts (see below)
+│   └── decompiled/         # Whole stock image decompiled to C, 1039 functions
 ├── sdk/                    # Docker-based build environment
 └── tools/
+    ├── fwtool.py           # Stock firmware explorer: map, glyphs, strings, bitmaps
     ├── img2c.py            # PNG → C header (RGB565, optional RLE / alpha mask)
     └── tlsr82-debugger-client/  # SWire flash tool
 ```

@@ -15,6 +15,13 @@
 #define VIBRATE_PIN          GPIO_PA5
 #define VIBRATE_ACTIVE_LEVEL 1
 
+// The motor only turns on battery power. On an external 3.3 V supply the pin
+// drives correctly and the rotor does not move — the inrush is more current than
+// a bench supply or the 3V3 pad will give. Test on the LiPo.
+
+// Stock toggles at a 300 ms half period (constant 0x493e0, compared << 4 against
+// the system tick at 0x800740). Shorter works; that is the reference.
+
 // Pulse counts the stock firmware uses. It counts toggles, so a "pulse" is two.
 #define VIBRATE_SHORT_PULSES 2    // stock limit 4 toggles
 #define VIBRATE_MEDIUM_PULSES 4   // stock limit 8
