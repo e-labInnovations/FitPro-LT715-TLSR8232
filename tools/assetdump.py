@@ -30,6 +30,7 @@ Usage:
 
 import argparse
 import os
+import re
 import struct
 import sys
 import zlib
@@ -47,8 +48,7 @@ STR_STRIDE = 0xea0
 STR_SLOTS  = STR_STRIDE // STR_SLOT
 STR_LANGS  = 7
 GLYPH_SIZE = 18
-GFX_START  = 0x04a860      # 1bpp graphics, battery icons first
-GFX_END    = 0x06fc04
+GFX_END    = 0x07d000      # assets are scattered up to the config sector
 
 INK = (255, 255, 255)
 BG  = (20, 20, 20)
@@ -271,97 +271,179 @@ def dump_strings(d, root, manifest):
 
 
 # -------------------------------------------------------------------- graphics
+#
+# The images are NOT raw 1bpp blobs, and they are not laid out end to end. Each
+# one is a self-describing record, and their offsets live in the code. Both facts
+# came out of the decompilation (reversed/), not from staring at bytes:
+#
+#   FUN_000001c8   the SPI flash read primitive: command 3, 24-bit address
+#   FUN_00004704   wraps it as read(ASSET_BASE + offset), which is what fixes
+#                  ASSET_BASE at 0x04a828 - just below where the pixel data
+#                  appeared to start when we were guessing
+#   FUN_00006a08   unpacks the record: byte +0 width, byte +1 height, a colour
+#                  count, then the palette, then the pixel rows
+#   FUN_00007928   the draw entry point, called with a constant offset - so the
+#                  124 call sites ARE the asset index
+#
+# Record layout, mode 0 (the built-in assets):
+#
+#   u8    width
+#   u8    height
+#   u16   bits per pixel        (1 or 8 in this image)
+#   u32   palette entry count
+#   n x u16  palette, RGB565 little-endian
+#   rows  packed pixels, ceil(width * bpp / 8) bytes per row, top-down,
+#         most significant bit leftmost
+#
+# Two populations: 1bpp stencils in a single colour (icons, digits, where index 0
+# is transparent) and 8bpp palettized colour images up to a full 128x128 screen -
+# the watch faces. Sizes check out exactly both ways: a 24x11 1bpp record is
+# 8 + 2 + 3*11 = 43 bytes, matching the spacing between digit-table entries, and
+# the 128x128 face is 8 + 2*76 + 128*128 = 16544.
+#
+# Reading the u16 at +2 as a colour count instead of a bit depth is the mistake
+# that makes everything above 1bpp unparseable, and it costs 70% of the region.
+#
+# FUN_00006a08 has a second mode, selected by a state flag, that parses a real
+# BMP header (bfOffBits at +0x0a, biWidth +0x12, biHeight +0x16, biBitCount
+# +0x1c, data at +0x36). No BMP signature exists anywhere in this image, so that
+# path is for faces uploaded over BLE, not for anything built in.
 
-def find_segments(d, args):
-    """Split the graphics region where the row stride changes.
+ASSET_BASE = 0x04a828
 
-    Splitting on blank runs alone does not work: consecutive images butt right
-    up against each other with no separator, so a run of blanks finds some
-    boundaries and misses many. What does change at a boundary is the row
-    stride, since the images are different widths.
 
-    So: estimate a local width for every block of the region, then merge runs of
-    blocks that agree. Blocks that are entirely blank act as separators. This is
-    still inference, not information from the firmware - two neighbours that
-    happen to share a width stay merged.
+def asset_header(d, off):
+    """Parse a record header at an absolute address. None if it is not one."""
+    if off + 8 > len(d):
+        return None
+    w, h = d[off], d[off + 1]
+    bpp = struct.unpack_from('<H', d, off + 2)[0]
+    pal = struct.unpack_from('<I', d, off + 4)[0]
+    if not (1 <= w <= 240 and 1 <= h <= 240 and bpp in (1, 2, 4, 8)
+            and 1 <= pal <= 256):
+        return None
+    if bpp < 8 and pal > (1 << bpp):
+        return None
+    stride = (w * bpp + 7) // 8
+    size = 8 + 2 * pal + stride * h
+    if off + size > len(d):
+        return None
+    return dict(w=w, h=h, bpp=bpp, pal=pal, stride=stride, size=size)
+
+
+def scan_records(d, code_notes):
+    """Every record in the asset area, found by chaining valid headers.
+
+    A single valid-looking header is weak evidence - w, h, a small bpp and a
+    small palette count is a pattern plain pixel data hits by chance. Requiring
+    that the *next* record also parses makes it strong, because a false positive
+    almost never lands exactly on another one.
+
+    Records sit in runs with gaps between them, so a failed parse advances one
+    byte rather than giving up. Coverage on this image is 74% of the area, which
+    is what is left after the string table, the fonts and genuine padding.
     """
-    blocks = []
-    pos = GFX_START
-    while pos < GFX_END:
-        end = min(pos + args.block, GFX_END)
-        chunk = d[pos:end]
-        if not any(chunk):
-            blocks.append((pos, end, None))
+    found = {}
+    off = ASSET_BASE
+    while off < GFX_END:
+        hdr = asset_header(d, off)
+        if hdr and (asset_header(d, off + hdr['size']) or off + hdr['size'] >= GFX_END):
+            found[off] = hdr
+            off += hdr['size']
         else:
-            blocks.append((pos, end, guess_width(d, pos, end, args.max_width)))
-        pos = end
-
-    segs, cur = [], None
-    for start, end, w in blocks:
-        if w is None:
-            if cur:
-                segs.append(cur)
-                cur = None
-            continue
-        if cur and cur[2] == w:
-            cur = (cur[0], end, w)
-        else:
-            if cur:
-                segs.append(cur)
-            cur = (start, end, w)
-    if cur:
-        segs.append(cur)
-
-    out = []
-    for start, end, w in segs:
-        # trim trailing blanks, then snap to a whole number of rows measured
-        # from the region start so rows do not come out sheared
-        while end > start and d[end - 1] == 0:
-            end -= 1
-        phase = (start - GFX_START) % w
-        start -= phase
-        if end - start >= max(args.min_len, 2 * w):
-            out.append((start, end, w))
-    return out
+            off += 1
+    # anything the code names but the chain missed
+    for rel in code_notes:
+        a = ASSET_BASE + rel
+        if a not in found:
+            hdr = asset_header(d, a)
+            if hdr:
+                found[a] = hdr
+    return found
 
 
-def guess_width(d, start, end, max_w, window=2048):
-    """Autocorrelation over the segment: rows of a picture resemble the rows
-    above and below them, so the true row stride scores highest.
+def code_offsets(src_path, hdr_path, d):
+    """Every asset offset the code passes to the draw function.
 
-    Two details matter. Most of this data is blank, so scoring byte equality
-    outright rewards every short lag for matching zero against zero - pairs
-    where both bytes are blank are skipped. And the true width's multiples
-    score nearly as well, so once a winner is found its sub-harmonics are
-    checked and the smallest near-equal one wins.
-
-    Scored over a window from the segment start rather than the whole segment:
-    if the segmentation merged two images, the first one still dominates.
+    Two shapes at the call sites: a constant, and an index into a table of
+    constants (`*(undefined4 *)(TABLE + i * 4)`), which is how icon sets and
+    digit runs are stored. Tables are walked until an entry stops parsing as a
+    record header.
     """
-    win = d[start:min(end, start + window)]
-    n = len(win)
-    scored = []
-    for lag in range(2, min(max_w, n // 3) + 1):
-        tot = hit = 0
-        for i in range(n - lag):
-            a, b = win[i], win[i + lag]
-            if a or b:
-                tot += 1
-                hit += (a == b)
-        if tot:
-            scored.append((hit / tot, lag))
-    if not scored:
-        return max(1, n)
+    defs = {}
+    pat = re.compile(r'#define (\S+)\s+(?:\(0x([0-9a-f]{8})u\)'
+                     r'|\(\(volatile unsigned char \*\)0x([0-9a-f]{8})u\)'
+                     r'|\(\*\(volatile unsigned char \*\*\)0x([0-9a-f]{8})u\))')
+    for line in open(hdr_path):
+        m = pat.match(line)
+        if m:
+            defs[m.group(1)] = int(m.group(2) or m.group(3) or m.group(4), 16)
 
-    best_score, best = max(scored)
-    by_lag = dict((lag, sc) for sc, lag in scored)
-    for div in range(2, best + 1):
-        if best % div == 0:
-            cand = best // div
-            if cand >= 2 and by_lag.get(cand, 0) >= best_score * 0.9:
-                best = cand
+    src = open(src_path).read()
+    found = {}          # offset -> note
+
+    draw = re.compile(r'FUN_0000(?:7928|7984|7994)\(\s*([^,\)]+)')
+    tables = set()
+    for m in draw.finditer(src):
+        arg = m.group(1).strip()
+        if arg in defs:
+            off = defs[arg]
+            if asset_header(d, ASSET_BASE + off):
+                found.setdefault(off, "direct: %s" % arg)
+        else:
+            t = re.match(r'\*\(undefined4 \*\)\((PTR_\w+|DAT_\w+)\s*\+', arg)
+            if t and t.group(1) in defs:
+                tables.add(t.group(1))
+
+    for name in sorted(tables):
+        addr = defs[name]
+        for i in range(256):
+            if addr + 4 * i + 4 > len(d):
                 break
-    return best
+            off = struct.unpack_from('<I', d, addr + 4 * i)[0]
+            if off >= len(d) or not asset_header(d, ASSET_BASE + off):
+                break
+            found.setdefault(off, "table %s[%d]" % (name, i))
+
+    # Records tend to sit in runs - a digit set, an icon strip - so from every
+    # known offset, walk forward while the next header still parses. That picks
+    # up frames the code reaches by arithmetic rather than by a constant.
+    for off in list(found):
+        cur = off
+        for _ in range(64):
+            hdr = asset_header(d, ASSET_BASE + cur)
+            if not hdr:
+                break
+            cur += hdr['size']
+            if cur in found or not asset_header(d, ASSET_BASE + cur):
+                break
+            found[cur] = "run after 0x%06x" % off
+    return found
+
+
+def decode_asset(d, addr, hdr):
+    """Returns (rows of RGB triples, palette). At 1bpp index 0 is transparent
+    and comes back as the PNG background; at 8bpp every index is a real colour."""
+    pal = []
+    for i in range(hdr['pal']):
+        c = struct.unpack_from('<H', d, addr + 8 + 2 * i)[0]
+        r, g, b = (c >> 11) & 0x1f, (c >> 5) & 0x3f, c & 0x1f
+        pal.append((r << 3 | r >> 2, g << 2 | g >> 4, b << 3 | b >> 2))
+    data = addr + 8 + 2 * hdr['pal']
+    bpp, mask = hdr['bpp'], (1 << hdr['bpp']) - 1
+    rows = []
+    for y in range(hdr['h']):
+        row = []
+        for x in range(hdr['w']):
+            bit = x * bpp
+            byte = d[data + y * hdr['stride'] + bit // 8]
+            idx = (byte >> (8 - bpp - bit % 8)) & mask
+            if bpp == 1:
+                row.append(BG if idx == 0 else pal[0])
+            else:
+                row.append(pal[idx] if idx < len(pal) else BG)
+        rows.append(row)
+    return rows, pal
 
 
 def dump_graphics(d, root, args, manifest):
@@ -371,70 +453,123 @@ def dump_graphics(d, root, args, manifest):
     if args.headers:
         os.makedirs(hdir, exist_ok=True)
 
-    segs = find_segments(d, args)
-    if args.limit:
-        segs = segs[:args.limit]
-    print("graphics: %d segments between 0x%06x and 0x%06x"
-          % (len(segs), GFX_START, GFX_END))
+    notes = {}
+    if os.path.exists(args.src) and os.path.exists(args.decl):
+        notes = code_offsets(args.src, args.decl, d)
+    else:
+        print("graphics: no decompilation at %s, so records will be unnamed "
+              "(run tools/decomp2proj.py to get provenance)" % args.src)
 
-    for start, end, wbytes in segs:
-        nrows = (end - start) // wbytes
-        if nrows < 2:
-            continue
-        bits = []
-        for y in range(nrows):
-            row = []
-            for xb in range(wbytes):
-                b = d[start + y * wbytes + xb]
-                row += [(b >> (7 - i)) & 1 for i in range(8)]
-            bits.append(row)
+    records = scan_records(d, notes)
+    covered = sum(h['size'] for h in records.values())
+    depths = {}
+    for h in records.values():
+        depths[h['bpp']] = depths.get(h['bpp'], 0) + 1
+    print("graphics: %d records, %d bytes (%.0f%% of the asset area), %s"
+          % (len(records), covered, 100.0 * covered / (GFX_END - ASSET_BASE),
+             ", ".join("%d at %dbpp" % (n, b) for b, n in sorted(depths.items()))))
 
-        # Some assets store ink as 1, others as 0 - the battery icons come out
-        # as black shapes on white if taken literally. Anything more than half
-        # set is treated as inverted so the PNG reads as ink on dark. The
-        # header keeps the original bytes either way.
-        ink = sum(sum(r) for r in bits)
-        inverted = ink * 2 > nrows * wbytes * 8
-        if inverted:
-            bits = [[1 - v for v in r] for r in bits]
+    for addr in sorted(records):
+        hdr = records[addr]
+        rel = addr - ASSET_BASE
+        rows, pal = decode_asset(d, addr, hdr)
+        stem = "gfx_%06x_%dx%d_%dbpp" % (rel, hdr['w'], hdr['h'], hdr['bpp'])
 
-        stem = "gfx_%06x_w%d" % (start, wbytes * 8)
-        rows = bits_to_rows(bits, args.scale)
-        png(os.path.join(gdir, stem + ".png"), len(rows[0]) // 3, len(rows), rows)
-        manifest.append(("graphic", start, end - start, wbytes * 8, nrows,
-                         "graphics/" + stem + ".png",
-                         "width estimated" + (", shown inverted" if inverted else "")))
+        # small icons are unreadable at 1:1, so scale them up more
+        scale = args.scale
+        if max(hdr['w'], hdr['h']) < 32:
+            scale = max(scale, 4)
+        out = []
+        for row in rows:
+            line = []
+            for px in row:
+                line += list(px) * scale
+            for _ in range(scale):
+                out.append(list(line))
+        png(os.path.join(gdir, stem + ".png"), len(out[0]) // 3, len(out), out)
+
+        note = notes.get(rel, "found by chaining")
+        manifest.append(("graphic", addr, hdr['size'], hdr['w'], hdr['h'],
+                         "graphics/" + stem + ".png", note))
 
         if args.headers:
+            raw = d[addr:addr + hdr['size']]
             with open(os.path.join(hdir, stem + ".h"), "w") as fh:
-                fh.write('''/* 1bpp image from the stock LT716 firmware at flash 0x%06x.
+                fh.write("""/* Image from the stock LT716 firmware.
  *
- * Extracted by tools/assetdump.py. %d bytes per row, %d rows, so %d x %d pixels
- * with the most significant bit of each byte leftmost.
+ * Asset offset 0x%06x (flash 0x%06x), %d bytes, %d x %d at %d bpp with a
+ * %d-entry palette. Provenance: %s.
  *
- * The width was ESTIMATED by autocorrelation, not read from the firmware -
- * nothing in the image records it. If this renders skewed, the real width is
- * probably a divisor or multiple of this one; check with
- *   python3 tools/fwtool.py FW width 0x%06x
+ * The record is kept whole so a decoder can take it unchanged:
+ *
+ *   bytes 0..1   width, height
+ *   bytes 2..3   bits per pixel
+ *   bytes 4..7   palette entry count
+ *   bytes 8..    palette, RGB565 little-endian
+ *   then         %d rows of %d bytes, top-down, most significant bit leftmost
+ *%s
  */
 
 #ifndef %s_H
 #define %s_H
 
-#define %s_W      %d
-#define %s_H_PX   %d
-#define %s_STRIDE %d
+#define %s_W       %d
+#define %s_H_PX    %d
+#define %s_BPP     %d
+#define %s_PALETTE %d
+#define %s_STRIDE  %d
+#define %s_OFFSET  0x%06x
 
 %s
 
 #endif
-''' % (start, wbytes, nrows, wbytes * 8, nrows, start,
-       stem.upper(), stem.upper(), stem.upper(), wbytes * 8,
-       stem.upper(), nrows, stem.upper(), wbytes,
-       c_array(stem + "_data", d[start:start + wbytes * nrows])))
-            manifest.append(("graphic-header", start, wbytes * nrows,
-                             wbytes * 8, nrows, "headers/" + stem + ".h",
-                             "width estimated"))
+""" % (rel, addr, hdr['size'], hdr['w'], hdr['h'], hdr['bpp'], hdr['pal'],
+       note, hdr['h'], hdr['stride'],
+       "\n * At 1 bpp, index 0 is transparent and index 1 is the palette colour."
+       if hdr['bpp'] == 1 else "",
+       stem.upper(), stem.upper(), stem.upper(), hdr['w'], stem.upper(), hdr['h'],
+       stem.upper(), hdr['bpp'], stem.upper(), hdr['pal'], stem.upper(),
+       hdr['stride'], stem.upper(), rel, c_array(stem + "_data", raw)))
+            manifest.append(("graphic-header", addr, hdr['size'], hdr['w'],
+                             hdr['h'], "headers/" + stem + ".h", note))
+
+    # Records that share a size are almost always one set - the ten digits of a
+    # clock font, an icon strip, the frames of an animation. Sheets make that
+    # visible: 30 records at 8x12 turn out to be digit runs in three colours.
+    sdir = os.path.join(gdir, "sets")
+    os.makedirs(sdir, exist_ok=True)
+    groups = {}
+    for addr in sorted(records):
+        h = records[addr]
+        groups.setdefault((h['w'], h['h'], h['bpp']), []).append(addr)
+    sheets = 0
+    for (w, h, bpp), addrs in sorted(groups.items()):
+        if len(addrs) < 2:
+            continue
+        cols = min(len(addrs), max(1, 256 // max(1, w)))
+        grid_rows = (len(addrs) + cols - 1) // cols
+        canvas = [[BG] * (cols * w) for _ in range(grid_rows * h)]
+        for i, addr in enumerate(addrs):
+            rows, _ = decode_asset(d, addr, records[addr])
+            ox, oy = (i % cols) * w, (i // cols) * h
+            for y, row in enumerate(rows):
+                for x, px in enumerate(row):
+                    canvas[oy + y][ox + x] = px
+        scale = 2 if w >= 32 else 4
+        out = []
+        for row in canvas:
+            line = []
+            for px in row:
+                line += list(px) * scale
+            for _ in range(scale):
+                out.append(list(line))
+        fn = "set_%dx%d_%dbpp_x%d.png" % (w, h, bpp, len(addrs))
+        png(os.path.join(sdir, fn), len(out[0]) // 3, len(out), out)
+        manifest.append(("graphic-set", addrs[0], len(addrs), w, h,
+                         "graphics/sets/" + fn,
+                         "%d records sharing this size" % len(addrs)))
+        sheets += 1
+    print("         %d contact sheets for records that share a size" % sheets)
 
 
 # ------------------------------------------------------------------------ main
@@ -489,21 +624,18 @@ def main():
     ap.add_argument("--scale", type=int, default=2, help="PNG pixel scale (default 2)")
     ap.add_argument("--cols", type=int, default=32, help="glyphs per atlas row")
     ap.add_argument("--per-sheet", type=int, default=1024, help="glyphs per atlas PNG")
-    ap.add_argument("--block", type=int, default=256,
-                    help="bytes per width probe when segmenting (default 256)")
-    ap.add_argument("--min-len", type=int, default=32,
-                    help="ignore segments smaller than this (default 32)")
-    ap.add_argument("--max-width", type=int, default=32,
-                    help="largest row stride to consider, in bytes (default 32)")
-    ap.add_argument("--limit", type=int, default=0, help="stop after N graphics")
+    ap.add_argument("--src", default="reversed/src/firmware.c",
+                    help="decompiled source, for the asset offsets")
+    ap.add_argument("--decl", default="reversed/include/fw_data.h",
+                    help="generated data header, to resolve those offsets")
     ap.add_argument("--no-headers", dest="headers", action="store_false",
                     help="PNGs and text only, skip the C headers")
     ap.add_argument("--skip-graphics", action="store_true")
     args = ap.parse_args()
 
     d = open(args.firmware, 'rb').read()
-    if len(d) < GFX_END:
-        sys.exit("image is %d bytes, too short to hold the asset region" % len(d))
+    if len(d) < 0x070000:
+        sys.exit("image is %d bytes, too short to hold the assets" % len(d))
 
     root = args.outdir
     os.makedirs(root, exist_ok=True)
