@@ -311,7 +311,7 @@ index matches Unicode, the strings match the UI.
 0x0339b0-0x0441c8  font, CJK            3756 glyphs, same format
 0x0441c8-0x044200  string table header  magic 0xBEEF
 0x044200-0x04a860  UI strings           7 languages x 78 slots
-0x04a860-0x06fc04  not yet identified   ~149 KB
+0x04a860-0x06fc04  1bpp graphics        battery icons first, 56 px wide
 0x06fc04-0x07d000  erased
 ```
 
@@ -353,14 +353,48 @@ The slot list doubles as a feature inventory: Steps, Heart rate, Sports,
 Running, Situp, Skipping, Bike riding, Camera, Stopwatch, Looking for, Message,
 Qr code, Music, Sleep, Weather, Long press, Low battery, Power down, Unbundle.
 
-### What is still unknown
+### Graphics
 
-`0x04a860`-`0x06fc04`, about 149 KB. It is not raw RGB565, not 1bpp bitmaps at
-any display-plausible width, not a fixed-stride font (no periodicity), and not
-UTF-16 text. Byte density sits near 50%, so compressed assets are the most
-likely answer. The icons the UI clearly draws — battery, power symbol — have not
-been located either; the region around `0x019200` in the main application looks
-bitmap-like and is the next place to check.
+The last 149 KB is **1bpp bitmaps**, and the reason it looked like noise for so
+long is that the row width is not 128. Nothing stores the width, but rows of the
+same shape repeat, so autocorrelation recovers it:
+
+```bash
+python3 tools/fwtool.py $FW width 0x04a860     # -> 7 bytes = 56 px
+python3 tools/fwtool.py $FW bitmap icons.png --off 0x04a860 --width 7 --rows 180
+```
+
+At `0x04a860` that gives the battery icons — rounded outlines with the terminal
+nub, one frame per charge level. Widths differ per asset: autocorrelation around
+`0x05a000` points at 31 bytes instead of 7, so the region is a series of images
+of assorted sizes rather than one uniform sheet.
+
+Still open: the per-asset index. Offsets and dimensions are presumably passed
+from code, so finding them properly means disassembling — see below. There is no
+sign of an offset table in the region itself.
+
+### Getting to code
+
+Not with capstone. TC32 is Telink's own ISA, and while it looks Thumb-shaped it
+does not share Thumb's encodings — 108 KB of TC32 code contains 349 byte pairs
+that would be a Thumb `push`, 33 that would be a `pop`, and **zero** `bx lr`.
+Real Thumb code that size would show thousands of each. Feeding it to capstone
+in Thumb mode produces long runs of implausible `lsrs`, which is what data looks
+like when you force a decoder onto it.
+
+The route that does work is Ghidra with a TC32 processor module, which is what
+`ghidra_project/` is set up for. Two things make that easier now:
+
+- `fwtool.py map` gives the exact code/data boundaries, so the fonts, string
+  table and bitmaps can be marked as data instead of being disassembled into
+  noise. Only `0x000000-0x01a8a4` and `0x020000-0x028c74` are code.
+- `GpioPinMap.java` already decodes stores to the GPIO registers, and a literal
+  scan confirms the registers are referenced individually — `PA_OEN` and
+  `PA_OUT` 15 times each, `PC_OEN`/`PC_OUT` 10 each, `PB` only 4/3.
+
+Expect readable disassembly and identifiable functions rather than clean C: the
+decompiler is only as good as the processor module's pcode, and TC32 modules are
+community-built.
 
 ### Using the tool
 

@@ -158,6 +158,39 @@ def cmd_cjk(d, args):
     if line: print("  " + line)
 
 
+def cmd_width(d, args):
+    """Row width of 1bpp graphics is not stored anywhere obvious, but rows of the
+    same shape repeat, so autocorrelation finds it."""
+    win = d[args.off:args.off + args.window]
+    out = []
+    for lag in range(2, args.max_width + 1):
+        same = sum(1 for i in range(len(win) - lag) if win[i] == win[i + lag])
+        out.append((same / (len(win) - lag), lag))
+    out.sort(reverse=True)
+    print("best row strides at 0x%06x (harmonics of the true width also score high):"
+          % args.off)
+    for score, lag in out[:6]:
+        print("  %2d bytes = %3d px   %.3f" % (lag, lag*8, score))
+
+
+def cmd_bitmap(d, args):
+    """Render 1bpp graphics. Width is in bytes; 7 (56 px) is right for the
+    battery icons at 0x04a860."""
+    sc = args.scale
+    rows = []
+    for y in range(args.rows):
+        line = []
+        for xb in range(args.width):
+            i = args.off + y*args.width + xb
+            byte = d[i] if i < len(d) else 0
+            for bit in range(8):
+                line += ([255,255,255] if (byte >> (7-bit)) & 1 else [20,20,20]) * sc
+        for _ in range(sc): rows.append(list(line))
+    png(args.out, len(rows[0])//3, len(rows), rows)
+    print("wrote %s (%d px wide, %d rows from 0x%06x)"
+          % (args.out, args.width*8, args.rows, args.off))
+
+
 def cmd_atlas(d, args):
     start, count, cols, sc = args.start, args.count, args.cols, args.scale
     rows = []
@@ -202,6 +235,20 @@ def main():
     c = sub.add_parser('cjk', help="dump the CJK codepoint index")
     c.add_argument('--count', type=int, default=256)
     c.set_defaults(func=cmd_cjk)
+
+    w = sub.add_parser('width', help="guess the row width of 1bpp graphics")
+    w.add_argument('off', type=lambda v: int(v, 0))
+    w.add_argument('--window', type=lambda v: int(v, 0), default=0x800)
+    w.add_argument('--max-width', type=int, default=64)
+    w.set_defaults(func=cmd_width)
+
+    b = sub.add_parser('bitmap', help="render 1bpp graphics to PNG")
+    b.add_argument('out')
+    b.add_argument('--off', type=lambda v: int(v, 0), default=0x04a860)
+    b.add_argument('--width', type=int, default=7, help="bytes per row (7 = 56 px)")
+    b.add_argument('--rows', type=int, default=180)
+    b.add_argument('--scale', type=int, default=3)
+    b.set_defaults(func=cmd_bitmap)
 
     a = sub.add_parser('atlas', help="render a glyph atlas to PNG")
     a.add_argument('out')
