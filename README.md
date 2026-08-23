@@ -633,6 +633,100 @@ What is left is short and unambiguous:
 
 ---
 
+## The stock firmware's lifecycle
+
+Screen off until you touch, one tap per screen, long press to select, off again
+after a few seconds — all of it is in the decompilation, and the timings are
+exact constants rather than guesses.
+
+### The loop has two halves
+
+`FUN_00004464` is the 10 ms main tick. It calls `FUN_0000e170`, which branches on
+whether the watch is awake (`FUN_0000af38`, a single state byte):
+
+| Awake | Asleep |
+| ----- | ------ |
+| `FUN_0000da74` UI/screen manager, `FUN_0000dd4c`, `vibrate_task`, sensor and BLE tasks | `FUN_0000cc54` only |
+
+**Asleep is not suspended.** The CPU keeps running the whole time: step counting,
+the battery read, the 1 Hz charger poll and BLE all continue. "Sleep" here means
+the panel is off, nothing more — which matters for any power work, because there
+is no deep-sleep state to wake from.
+
+### Screen off
+
+`FUN_0000a6e8` is the timeout test, and it reads a settings byte:
+
+| Setting | Timeout |
+| ------- | ------- |
+| default | **5 s** since last activity |
+| flag set | **15 s** |
+
+When it expires, `FUN_0000d258` calls `FUN_00005958(0)`, which is the ST7735
+shutdown in order: `0x28` DISPOFF, `0x10` SLPIN, then backlight PB3 low.
+
+### Waking
+
+PC2 is **interrupt-driven**, not polled. `FUN_00003b14(0x204, 1)` arms it at boot
+(`0x204` = port 2, bit 2 = PC2, the SDK's own pin encoding). On each edge
+`FUN_00003c60` clears GPIO IRQ bit `0x200000`, **flips the pin polarity** so the
+opposite edge fires next, and hands the event to `FUN_0000bea4(key, state, tick)`.
+
+If the watch was asleep, `FUN_0000d544` runs the wake sequence: `0x11` SLPOUT,
+`0x28`, `0x13`, `0x29` DISPON, backlight on, then a full redraw. **The touch that
+wakes it does not also advance a screen** — waking consumes the event.
+
+### Tap versus long press
+
+`FUN_0000bea4` stores the press timestamp in the key's slot with the low bit set
+as a valid marker. What happens next is decided purely by how long you hold:
+
+| Held for | Result | Constant |
+| -------- | ------ | -------- |
+| < 50 ms | ignored — debounce floor | `0xc350` |
+| 50 ms … 1 s, then released | **tap**: current screen ← queued screen id (`+0x13` copied to `+0xf`), redraw flag set | `0xf4240` |
+| still held at 1 s | **long press**: the UI tick calls `FUN_0000d778(1)` → `FUN_0000bbb0(1)`, which walks the screen table and enters the item | `0xf4240` |
+
+So the stock long-press threshold is **1 s**, and a release after 1 s is
+discarded rather than treated as a tap — which is why a slow finger on this
+hardware feels like it does nothing. Our own driver uses 1400 ms
+([lib/touch](lib/touch/)) for exactly that reason. Note there is **no double-tap
+gesture anywhere in the stock firmware**.
+
+### The screens
+
+Screen ids are decimal-coded — `0x64` = 100, `0x136` = 310, `0x1f4` = 500 — as
+`page * 100 + item`. Two tables:
+
+- **0x019f40**, the carousel `FUN_0000bbb0` walks: 310, 510, 760, 741, 431, 421,
+  411, 710, 610, 720 — ten entries, and the ASCII "Incoming Call" that follows in
+  flash is what marks the end of it.
+- **0x019e98**: the page roots and their items — 100, 200, 300, 400, 500, 600,
+  700 among them.
+
+Current screen lives at state `+0xf/+0x10`, the queued one at `+0x13/+0x14`, with
+a redraw flag at `+0x1b`. `FUN_0000bdb8(id)` jumps straight to a screen; boot
+calls it with **100**, the watch face.
+
+### Everything else that wakes it
+
+Touch is only one path. `FUN_0000d5d8` handles a notification — it sets the
+vibrate flag *then* wakes the screen — and the charger-insert edge and an
+incoming call each wake it the same way.
+
+### Every timing constant in one place
+
+| What | Value | Where |
+| ---- | ----- | ----- |
+| main tick | 10 ms | `DAT_000044d8` |
+| touch debounce floor | 50 ms | `DAT_0000c1c8` |
+| tap window / long-press threshold | 1 s | `DAT_0000c1c4`, `DAT_0000dd28` |
+| charger poll | 1 s | `DAT_000044e4` |
+| screen timeout | 5 s, or 15 s | `DAT_0000a710`, `DAT_0000a70c` |
+| charge animation step | 90 s | `DAT_0000c36c` |
+
+---
+
 ## Dumping every asset
 
 [tools/assetdump.py](tools/assetdump.py) writes the whole asset side of the
