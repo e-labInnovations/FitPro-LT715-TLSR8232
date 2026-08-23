@@ -318,11 +318,30 @@ python tools/tlsr82-debugger-client/tlsr82-debugger-client.py \
   --serial-port /dev/ttyACM0 watch_gpio
 ```
 
-Then make the watch vibrate. Every `OEN`/`OUT` bit transition is printed with a
-timestamp, and pins already mapped are labelled so the unexplained one stands
-out; Ctrl-C prints a summary ranked by transition count. **OEN is active low** —
-a `0` bit means the driver is on. `--regs` picks other registers (`FUNC` shows
-peripheral mux changes), `--interval` slows the output down.
+Then make the watch vibrate — the FitPro app can do it on command, which makes
+this a repeatable experiment rather than a wait for an alarm.
+
+Narrow the watch to the pins still in question, so nothing else can distract:
+
+```bash
+python tools/tlsr82-debugger-client/tlsr82-debugger-client.py \
+  --serial-port /dev/ttyACM0 watch_gpio --only PA3,PA4,PA5,PB2,PC4
+```
+
+By default the display bus and SWS (`PA1,PA6,PB3,PC1,PC3,PC5,PC7`) are ignored —
+they toggle on every frame the stock UI draws and would bury everything else.
+`--only` overrides that with an explicit list.
+
+Every `OEN`/`OUT` transition is printed with a timestamp, pins already mapped are
+labelled so an unexplained one stands out, and Ctrl-C prints a summary ranked by
+transition count. **OEN is active low** — a `0` bit means the driver is on. Two
+passes are worth running: `--regs OEN` alone is very quiet, since a pin switching
+from high-Z to driven is exactly what a motor turning on looks like; `--regs OUT`
+catches a pin that is always an output and merely changes level.
+
+Wiring: SWS and GND to the bridge, and leave the bridge's 3V3 **disconnected**
+while the watch runs on its own battery. `init_soc` resets the chip on connect,
+so the firmware reboots and the app has to reconnect before you trigger the buzz.
 
 For the disassembly route, the Ghidra project in `ghidra_project/` already has
 `GpioPinMap.java`, which decodes stores to the GPIO registers — but re-dump

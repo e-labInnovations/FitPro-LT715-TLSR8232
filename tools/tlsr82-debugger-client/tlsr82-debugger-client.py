@@ -589,6 +589,11 @@ GPIO_KNOWN = {
     'PC7': 'SWS',
 }
 
+# Ignored by default: the display bus and the debug pin. These toggle on every
+# frame the stock UI draws, thousands of times a second, and would bury the one
+# transition you are actually looking for.
+GPIO_NOISY = ['PA1', 'PA6', 'PB3', 'PC1', 'PC3', 'PC5', 'PC7']
+
 
 def watch_gpio_main(args):
     """
@@ -613,6 +618,13 @@ def watch_gpio_main(args):
     SLEEP_BETWEEN_READ_AND_WRITE_IN_S = 0.001
 
     watched = [r.strip().upper() for r in args.regs.split(',')]
+    only = {p.strip().upper() for p in args.only.split(',') if p.strip()} \
+        if args.only else None
+    ignore = {p.strip().upper() for p in args.ignore.split(',') if p.strip()}
+    if only:
+        print(f'Watching only: {", ".join(sorted(only))}')
+    elif ignore:
+        print(f'Ignoring (already mapped): {", ".join(sorted(ignore))}')
     prev = {}
     changed_bits = {}
     t0 = time.time()
@@ -636,6 +648,10 @@ def watch_gpio_main(args):
                         if not diff & (1 << bit):
                             continue
                         pin = f'{port}{bit}'
+                        if only is not None and pin not in only:
+                            continue
+                        if only is None and pin in ignore:
+                            continue
                         note = GPIO_KNOWN.get(pin, '** UNMAPPED **')
                         level = 1 if val & (1 << bit) else 0
                         print(f'{time.time() - t0:8.3f}  {key} {pin} -> {level}'
@@ -727,6 +743,16 @@ def main():
         help="Comma-separated GPIO registers to watch, from "
              f"{','.join(GPIO_REGS)}. Default: OEN,OUT — the two that change "
              "when firmware drives a pin.")
+    watch_gpio_parser.add_argument(
+        '--ignore', type=str, default=','.join(GPIO_NOISY),
+        help="Comma-separated pins to leave out. Defaults to the display bus and "
+             f"SWS ({','.join(GPIO_NOISY)}), which toggle constantly and would "
+             "bury everything else. Pass an empty string to see them.")
+    watch_gpio_parser.add_argument(
+        '--only', type=str, default=None,
+        help="Comma-separated pins to watch, to the exclusion of all others "
+             "(e.g. PA3,PA4,PA5,PB2,PC4 — the ones still unaccounted for). "
+             "Overrides --ignore.")
     watch_gpio_parser.add_argument(
         '--interval', type=float, default=0.0,
         help="Seconds to sleep between polls. Default: 0 (as fast as the link "
