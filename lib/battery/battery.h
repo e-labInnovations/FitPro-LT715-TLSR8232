@@ -51,6 +51,22 @@
 #define CHARGER_PRESENT_MIN_MV 4400
 #define CHARGER_PRESENT_MAX_MV 6500
 
+// How the stock firmware runs all this, from the call sites:
+//
+//   - the charger check (FUN_0000c37c) is called from the 10 ms main loop
+//     (FUN_00004464) but rate-limited to once per second. Nothing debounces the
+//     result beyond the median-of-16 in the ADC read itself: one sample per
+//     second decides the state.
+//   - "charger present" and "low battery" are two separate flags, at +3 and
+//     +0x10 of the device state. Charger-present has a dozen consumers across
+//     the UI and BLE paths; low-battery only a couple.
+//   - the low-battery action (FUN_0000be6c) fires only when low AND not
+//     charging, so plugging in silences it immediately even before the voltage
+//     recovers.
+//   - the charging progress the watch animates is a counter incremented every
+//     90 s and capped at 100 (FUN_0000c2ac). It is a timer, not a measurement,
+//     and it is not implemented here.
+
 // Percent as the stock firmware reports it. Note it is a five-step gauge, not a
 // continuous curve: 4100 mV and up reads 100, and everything from 3800 to 4099
 // also reads 100, so the top of the range is deliberately flat.

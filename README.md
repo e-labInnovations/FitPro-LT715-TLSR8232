@@ -726,6 +726,23 @@ what pinned the divider down.
 This also explains **PB5**, the other pin the README used to list as "driven
 output, purpose unclear": `FUN_0000c37c` drives it from the charger state.
 
+### How it actually runs
+
+Checked against the call sites, not just the leaf functions:
+
+- The charger check is called from the **10 ms main loop** (`FUN_00004464`) but
+  rate-limited to **once per second**. Nothing debounces the result beyond the
+  median-of-16 inside the ADC read — one sample per second decides the state.
+- **Charger-present and low-battery are two separate flags**, at `+3` and `+0x10`
+  of the device state. Charger-present has around a dozen consumers across the
+  UI and BLE paths; low-battery only a couple.
+- The **low-battery action is gated on NOT charging** (`FUN_0000be6c` tests both),
+  so plugging in silences the warning immediately, before the voltage recovers.
+  `examples/battery_charge` mirrors that.
+- The **charging progress the watch animates is a timer**, not a measurement: a
+  counter bumped every 90 s and capped at 100 (`FUN_0000c2ac`). Nothing in it is
+  derived from the battery.
+
 Two more constants from the same area:
 
 - **`0xfef` = 4079 mV** — while charging, dropping to or below this re-arms the

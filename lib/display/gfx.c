@@ -13,9 +13,35 @@ static bool _wrap = true;
 static int16_t _cursor_x = 0;
 static int16_t _cursor_y = 0;
 
+// Cell metrics for the current font, so opaque text can clear a whole cell
+// rather than just the glyph's own bounding box. Without this, drawing over a
+// previous string leaves crumbs: each glyph's box is narrower than its advance
+// and only as tall as that one character, so the gaps between letters and the
+// rows a taller neighbour reached are never repainted.
+static int8_t  _cell_top = 0;    // relative to the baseline, negative = above
+static uint8_t _cell_h   = 0;
+
 // Set the font to use for text rendering
 void gfx_set_font(const GFXfont *f) {
     _font = f;
+    _cell_top = 0;
+    _cell_h   = 0;
+    if (!f) return;
+
+    // Scan the glyphs once for the font's true extent above and below the
+    // baseline. GFXfont carries yAdvance but not ascent/descent, and using
+    // yAdvance alone overshoots into the neighbouring line.
+    int16_t top = 0, bottom = 0;
+    uint16_t i, n = (uint16_t)(f->last - f->first);
+    GFXglyph *g = (GFXglyph *)f->glyph;
+    for (i = 0; i <= n; i++) {
+        int16_t gt = g[i].yOffset;
+        int16_t gb = g[i].yOffset + g[i].height;
+        if (gt < top)    top = gt;
+        if (gb > bottom) bottom = gb;
+    }
+    _cell_top = (int8_t)top;
+    _cell_h   = (uint8_t)(bottom - top);
 }
 
 // Set the text size (scaling factor)
@@ -94,7 +120,16 @@ int16_t gfx_draw_char(int16_t x, int16_t y, unsigned char c, uint16_t color, uin
     
     // Calculate actual pixel positions
     int16_t x_pixel, y_pixel;
-    
+
+    // Opaque text: repaint the entire cell first - full advance width, and the
+    // font's full height above and below the baseline - so nothing of whatever
+    // was here before survives between or around the glyph's own box.
+    if (bg != color && _cell_h) {
+        gfx_fill_rect(x, y + (int16_t)_cell_top * size,
+                      (int16_t)glyph->xAdvance * size,
+                      (int16_t)_cell_h * size, bg);
+    }
+
     // Draw character
     for (yy = 0; yy < h; yy++) {
         for (xx = 0; xx < w; xx++) {

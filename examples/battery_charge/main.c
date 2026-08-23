@@ -142,7 +142,10 @@ int main() {
         fmt_row(row, "", on ? "CHARGING" : " BATTERY");
         draw(ROW0 + ROW_H * 6, row, on ? ST77XX_GREEN : ST77XX_YELLOW);
 
-        fmt_row(row, "", battery_is_low(batt) ? "LOW BATT" : "        ");
+        // Stock behaviour: the low-battery warning is gated on NOT charging
+        // (FUN_0000be6c checks both), so plugging in clears it immediately
+        // rather than waiting for the pack to recover.
+        fmt_row(row, "", (battery_is_low(batt) && !on) ? "LOW BATT" : "        ");
         draw(ROW0 + ROW_H * 7, row, ST77XX_RED);
 
         sleep_ms(500);
