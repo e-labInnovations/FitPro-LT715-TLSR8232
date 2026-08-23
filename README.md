@@ -646,10 +646,14 @@ The stock code selects an ADC input by the SDK's own pin encoding — `port << 8
 bitmask`, confirmed by `FUN_0000e3d4`, which indexes the port registers with
 `param >> 8` and masks with `param & 0xff`:
 
-| Channel | Pin | Scaling in the firmware | mV per count | Full scale |
-| ------- | --- | ----------------------- | ------------ | ---------- |
-| `0x102` | PB1 | `avg * 57 / 100 + 71` (`FUN_0000e870`) | 0.57 | 4.8 V — a 1.2 V reference behind the PCB's 1:4 divider |
-| `0x104` | **PB2** | `(avg * 426 - 990) / 385` (`FUN_0000e9ec`) | 1.107 | ~9.6 V — the /8 prescaler, no divider |
+| Channel | Pin | Scaling in the firmware | mV per count | Of what |
+| ------- | --- | ----------------------- | ------------ | ------- |
+| `0x102` | PB1 | `avg * 57 / 100 + 71` (`FUN_0000e870`) | 0.57 | the battery, through the PCB's 1:4 divider |
+| `0x104` | **PB2** | `(avg * 426 - 990) / 385` (`FUN_0000e9ec`) | 1.107 | the charger rail, through a **1:8** divider |
+
+Both constants are "mV of the thing being measured", not mV at the pin — the
+firmware reads each channel with the reference and prescaler that make the
+board's own divider come out in real volts.
 
 **PB2 is the charger sense input.** It was on our unknown-pin list, dismissed as
 "bulk init only, probably unused" — the sweeps never found it because it is an
@@ -699,8 +703,25 @@ if (((mv - 4400) & 0xffff) > 2100) {   /* outside 4400..6500 */
 ```
 
 Charging is a **window**, not a threshold: 4400 mV to 6500 mV on that rail. The
-lower bound detects USB 5 V; the upper bound rejects a reading too high to be a
-charger. The masked subtraction is how the compiler expressed the range test.
+masked subtraction is how the compiler expressed the range test.
+
+The reason it is a window only becomes clear on hardware. The PB2 sense node
+follows **whichever of VBAT and VBUS is higher**, so it is never at zero:
+
+| State | Pack | PB2 pin | × 8 = rail | Verdict |
+| ----- | ---- | ------- | ---------- | ------- |
+| battery, unplugged | 4092 mV | 515 mV | **4120 mV** — the pack (ratio 7.95) | below 4400 → BATTERY |
+| battery, charging | 4236 mV | 653 mV | **5224 mV** — a USB supply | inside window → CHARGING |
+| no battery, on 3V3 | — | 58 mV | 464 mV | no rail at all |
+
+That is what the lower bound is for: **4400 mV is above a full battery
+(4200 mV)**, so a rail reading above it can only be an external supply. Testing
+the sense pin against zero would report charging forever.
+
+It also caught a bug on our side. `charger_read_mv()` first returned the *pin*
+voltage, so a charging watch reported 653 mV against a window starting at 4400
+and the state stayed on BATTERY. The ×8 was missing; the measured 7.95 ratio is
+what pinned the divider down.
 
 This also explains **PB5**, the other pin the README used to list as "driven
 output, purpose unclear": `FUN_0000c37c` drives it from the charger state.
@@ -725,11 +746,12 @@ python3 tools/tlsr82-debugger-client/tlsr82-debugger-client.py \
   --serial-port /dev/ttyACM0 write_flash examples/battery_charge/_build/battery_charge.bin
 ```
 
-Shows the pack voltage, the stock percentage, the PB2 rail in mV, and
-CHARGING/BATTERY. Unplugged, `CHG` should read near zero; on the charger it
-should jump to about 5000 and the state should flip within a second. If `CHG`
-stays at zero with a charger attached, PB2 is not the sense line on this board
-revision and the firmware evidence applies to another.
+Shows the pack voltage, the stock percentage, the charger rail, the raw PB2 pin
+voltage behind it, and CHARGING/BATTERY. Expect `CHG` to sit near the pack
+voltage when unplugged and jump to about 5200 on the charger — **not** zero
+either way. `PIN` is there for calibration: if it disagrees with a multimeter on
+PB2, the 1:8 ratio differs on your board and only `CHARGER_DIVIDER` needs
+changing.
 
 ---
 

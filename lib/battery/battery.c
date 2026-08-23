@@ -97,10 +97,16 @@ unsigned int battery_read_mv(void) {
     return counts_to_pin_mv(read_counts(BATTERY_PIN)) * BATTERY_DIVIDER;
 }
 
-unsigned int charger_read_mv(void) {
-    // No divider on PB2: the /8 prescaler alone puts full scale near 9.4 V, so
-    // a 5 V charger reads directly.
+unsigned int charger_read_pin_mv(void) {
     return counts_to_pin_mv(read_counts(CHARGER_PIN));
+}
+
+unsigned int charger_read_mv(void) {
+    // Scale back up through the board's 1:8 divider, so the result is in the
+    // same units as the stock firmware's thresholds. Reporting the pin voltage
+    // here instead was wrong by exactly this factor: a charging watch read
+    // 653 mV against a window starting at 4400.
+    return charger_read_pin_mv() * CHARGER_DIVIDER;
 }
 
 uint8_t charger_is_present(void) {

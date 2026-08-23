@@ -4,23 +4,31 @@
  * Everything here comes out of the decompiled stock image, so this example is
  * really a test of whether the reverse engineering was right:
  *
- *   BATT   the pack voltage on PB1, median-of-16 filtered
+ *   BATT   pack voltage on PB1, median-of-16 filtered
  *   PCT    percent through the stock five-step gauge (lib/battery)
- *   CHG    the PB2 charger rail in mV - the pin we had written off as unused
- *   STATE  CHARGING when PB2 sits in the stock window, 4400..6500 mV
+ *   CHG    the charger rail in mV - the PB2 pin reading scaled back up through
+ *          the board's 1:8 divider, so it is in the same units as the stock
+ *          firmware's own thresholds
+ *   PIN    the raw PB2 pin voltage behind that, for calibration
+ *   STATE  CHARGING when CHG sits inside the stock window, 4400..6500 mV
  *
- * How to read it:
- *   - unplugged, CHG should sit near zero and STATE should say BATTERY
- *   - on the charger, CHG should jump to somewhere near 5000 and STATE should
- *     flip to CHARGING within a second
+ * What the numbers do, measured on hardware:
  *
- * If CHG stays at zero with the charger plugged in, then PB2 is not the charger
- * sense line on this board revision, and the firmware evidence for it (channel
- * 0x104 selected by FUN_0000c37c) applies to a different revision.
+ *   unplugged   CHG tracks the battery, because the sense node follows whichever
+ *               of VBAT and VBUS is higher. 4092 mV of pack read 4120 mV here.
+ *   charging    CHG jumps to about 5200, a USB supply.
  *
- * PCT is deliberately coarse. The stock gauge only ever reports 0, 25, 50, 75
- * or 100, and reports 100 for everything from 3800 mV up - that flat top is in
- * the firmware's own table, not a bug here.
+ * So CHG is NOT zero when unplugged, and testing it against zero would report
+ * charging forever. The window's lower bound of 4400 mV is what separates the
+ * two cases, and it works precisely because 4400 is above a full battery.
+ *
+ * PCT is deliberately coarse: the stock gauge only reports 0, 25, 50, 75 or 100,
+ * and reports 100 for everything from 3800 mV up. That flat top is in the
+ * firmware's own table, not a rounding artefact here.
+ *
+ * Layout note: FreeMono9pt7b is a monospaced font, and every value below is
+ * right-aligned in a fixed-width field, so the columns line up and a shrinking
+ * number cannot leave a stale digit behind.
  */
 
 #include "drivers/5316/bsp.h"
@@ -34,12 +42,10 @@
 #include "../../lib/display/gfx.h"
 #include "../../lib/fonts/FreeMono9pt7b.h"
 
-#define Y_TITLE   2
-#define Y_BATT   20
-#define Y_PCT    34
-#define Y_CHG    52
-#define Y_STATE  66
-#define Y_LOW    84
+#define ROW0      2      // title
+#define ROW_H    15
+#define LABEL_W   5      // "BATT " - padded so values start in one column
+#define VALUE_W   6      // right-aligned, widest is "5224mV"
 
 _attribute_ram_code_ void irq_handler(void) {}
 
@@ -49,34 +55,52 @@ static void draw(int16_t y, const char *s, uint16_t color) {
     gfx_print(s);
 }
 
-// "BATT 4012mV" - fixed width so the row never leaves stale pixels behind
-static void fmt_mv(char *out, const char *tag, unsigned int mv) {
-    int i = 0;
-    while (*tag) out[i++] = *tag++;
-    out[i++] = ' ';
-    if (mv > 9999) mv = 9999;
-    out[i++] = (char)('0' + (mv / 1000) % 10);
-    out[i++] = (char)('0' + (mv / 100) % 10);
-    out[i++] = (char)('0' + (mv / 10) % 10);
-    out[i++] = (char)('0' + mv % 10);
+// label padded to LABEL_W, then text right-aligned in VALUE_W
+static void fmt_row(char *out, const char *label, const char *value) {
+    int i = 0, n = 0, pad;
+
+    while (label[n]) n++;
+    while (i < LABEL_W) out[i] = (i < n) ? label[i] : ' ', i++;
+
+    for (n = 0; value[n]; n++)
+        ;
+    for (pad = VALUE_W - n; pad > 0; pad--) out[i++] = ' ';
+    for (n = 0; value[n]; n++) out[i++] = value[n];
+    out[i] = '\0';
+}
+
+// unsigned decimal, no leading zeros - "515", "5224"
+static void fmt_uint(char *out, unsigned int v) {
+    char tmp[8];
+    int  i = 0, j = 0;
+
+    if (v == 0) tmp[i++] = '0';
+    while (v > 0) tmp[i++] = (char)('0' + v % 10), v /= 10;
+    while (i > 0) out[j++] = tmp[--i];
+    out[j] = '\0';
+}
+
+static void fmt_mv(char *out, unsigned int mv) {
+    int i;
+    fmt_uint(out, mv);
+    for (i = 0; out[i]; i++)
+        ;
     out[i++] = 'm';
     out[i++] = 'V';
     out[i] = '\0';
 }
 
-// "PCT  75%"
 static void fmt_pct(char *out, unsigned int pct) {
-    out[0] = 'P'; out[1] = 'C'; out[2] = 'T'; out[3] = ' '; out[4] = ' ';
-    if (pct > 100) pct = 100;
-    out[5] = pct >= 100 ? '1' : ' ';
-    out[6] = pct >= 100 ? '0' : (char)('0' + (pct / 10) % 10);
-    out[7] = pct >= 100 ? '0' : (char)('0' + pct % 10);
-    out[8] = '%';
-    out[9] = '\0';
+    int i;
+    fmt_uint(out, pct);
+    for (i = 0; out[i]; i++)
+        ;
+    out[i++] = '%';
+    out[i] = '\0';
 }
 
 int main() {
-    char buf[16];
+    char row[24], val[12];
 
     cpu_wakeup_init();
     clock_init(SYS_CLK_16M_Crystal);
@@ -89,28 +113,37 @@ int main() {
     gfx_set_font(&FreeMono9pt7b);
     gfx_fill_screen(ST77XX_BLACK);
 
-    draw(Y_TITLE, "BATT + CHG", ST77XX_CYAN);
+    draw(ROW0, "BATT + CHG", ST77XX_CYAN);
 
     while (1) {
-        unsigned int batt = battery_read_mv();
-        unsigned int chg  = charger_read_mv();
-        unsigned int pct  = battery_percent(batt);
-        uint8_t      on   = (chg >= CHARGER_PRESENT_MIN_MV
-                             && chg <= CHARGER_PRESENT_MAX_MV);
+        unsigned int batt   = battery_read_mv();
+        unsigned int pin_mv = charger_read_pin_mv();
+        unsigned int rail   = pin_mv * CHARGER_DIVIDER;
+        unsigned int pct    = battery_percent(batt);
+        uint8_t      on     = (rail >= CHARGER_PRESENT_MIN_MV
+                               && rail <= CHARGER_PRESENT_MAX_MV);
 
-        fmt_mv(buf, "BATT", batt);
-        draw(Y_BATT, buf, ST77XX_WHITE);
+        fmt_mv(val, batt);
+        fmt_row(row, "BATT", val);
+        draw(ROW0 + ROW_H * 2, row, ST77XX_WHITE);
 
-        fmt_pct(buf, pct);
-        draw(Y_PCT, buf, pct <= 25 ? ST77XX_RED : ST77XX_GREEN);
+        fmt_pct(val, pct);
+        fmt_row(row, "PCT", val);
+        draw(ROW0 + ROW_H * 3, row, pct <= 25 ? ST77XX_RED : ST77XX_GREEN);
 
-        fmt_mv(buf, "CHG ", chg);
-        draw(Y_CHG, buf, ST77XX_WHITE);
+        fmt_mv(val, rail);
+        fmt_row(row, "CHG", val);
+        draw(ROW0 + ROW_H * 4, row, on ? ST77XX_GREEN : ST77XX_WHITE);
 
-        draw(Y_STATE, on ? "CHARGING" : "BATTERY ",
-             on ? ST77XX_GREEN : ST77XX_YELLOW);
+        fmt_mv(val, pin_mv);
+        fmt_row(row, "PIN", val);
+        draw(ROW0 + ROW_H * 5, row, ST77XX_BLUE);
 
-        draw(Y_LOW, battery_is_low(batt) ? "LOW BATT" : "        ", ST77XX_RED);
+        fmt_row(row, "", on ? "CHARGING" : " BATTERY");
+        draw(ROW0 + ROW_H * 6, row, on ? ST77XX_GREEN : ST77XX_YELLOW);
+
+        fmt_row(row, "", battery_is_low(batt) ? "LOW BATT" : "        ");
+        draw(ROW0 + ROW_H * 7, row, ST77XX_RED);
 
         sleep_ms(500);
     }
