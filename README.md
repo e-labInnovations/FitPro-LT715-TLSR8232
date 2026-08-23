@@ -71,6 +71,10 @@ out of pin sweeps: see [Reading the pins out of the firmware](#reading-the-pins-
 
 ### Battery Sensing
 
+> The stock firmware's own gauge, thresholds and charger detection are decoded in
+> *Battery and charging, out of the firmware* below — including **PB2 as the
+> charger sense input**, which the pin sweeps never found.
+
 | Signal     | GPIO | Notes                                      |
 | ---------- | ---- | ------------------------------------------ |
 | VBAT sense | PB1  | 1:4 resistor divider from raw battery rail |
@@ -140,8 +144,9 @@ out of pin sweeps: see [Reading the pins out of the firmware](#reading-the-pins-
 
 > Heart rate sensor and accelerometer — GPIO assignments unknown. PA4 is an
 > interrupt input and is the strongest accelerometer candidate (see *Reading the
-> pins out of the firmware*). ADC scan hinted PB2/PB5 may carry HR sensor signals
-> but not confirmed. The vibrator (PA5) and touch key (PC2) are now mapped.
+> pins out of the firmware*). Now mapped: the vibrator (PA5), the touch key
+> (PC2), the charger sense input (PB2) and PB5, which the stock firmware drives
+> from the charger state — see *Battery and charging, out of the firmware*.
 
 ---
 
@@ -622,8 +627,109 @@ What is left is short and unambiguous:
 | --- | -------- | ---------- |
 | PA5 | `\| 0x20` / `& 0xdf` in four functions, one of them a toggle-counter with limits 4/8/0x18 | **vibrator motor — confirmed on hardware** (on battery; see the warning under *Vibrator Motor*) |
 | PA4 | `FUN_000066e8` sets FUNC/IE, disables the output driver, clears POL, sets an interrupt-enable bit and registers a handler | interrupt input, probably the accelerometer |
-| PB5 | `FUN_0000c37c` drives it high/low against a timeout | driven output in stock firmware, purpose unclear — so the "UART RX pad" label is an assumption, not a measurement |
-| PA3, PB2, PC4 | bulk init only | probably unused |
+| PB5 | `FUN_0000c37c` drives it from the charger state | **driven from charging**, so the "UART RX pad" label is an assumption, not a measurement |
+| PB2 | `FUN_0000c37c` reads ADC channel `0x104` and range-tests 4400–6500 mV | **charger sense input** — see *Battery and charging, out of the firmware* |
+| PA3, PC4 | bulk init only | probably unused |
+
+---
+
+## Battery and charging, out of the firmware
+
+The first real payoff from [reversed/](reversed/): the whole battery and charger
+path, read out of the decompilation rather than guessed at. Implemented in
+[lib/battery/](lib/battery/), verifiable on hardware with
+[examples/battery_charge/](examples/battery_charge/).
+
+### The two ADC channels
+
+The stock code selects an ADC input by the SDK's own pin encoding — `port << 8 |
+bitmask`, confirmed by `FUN_0000e3d4`, which indexes the port registers with
+`param >> 8` and masks with `param & 0xff`:
+
+| Channel | Pin | Scaling in the firmware | mV per count | Full scale |
+| ------- | --- | ----------------------- | ------------ | ---------- |
+| `0x102` | PB1 | `avg * 57 / 100 + 71` (`FUN_0000e870`) | 0.57 | 4.8 V — a 1.2 V reference behind the PCB's 1:4 divider |
+| `0x104` | **PB2** | `(avg * 426 - 990) / 385` (`FUN_0000e9ec`) | 1.107 | ~9.6 V — the /8 prescaler, no divider |
+
+**PB2 is the charger sense input.** It was on our unknown-pin list, dismissed as
+"bulk init only, probably unused" — the sweeps never found it because it is an
+analog input that only carries a signal when a charger is attached.
+
+Both reads use the same filter, which is worth copying: 16 samples, sorted, the
+four highest and four lowest discarded, the middle eight averaged. On this board
+that matters — the motor and the backlight both dent the rail.
+
+### The gauge
+
+`FUN_0000a020` clamps the reading to 3350–4200 mV, then walks a table of seven
+`uint16` thresholds at `0x19e28` and takes the level byte at the matching index
+from `0x19e40`:
+
+| Battery | Reported |
+| ------- | -------- |
+| ≥ 4100 mV | 100 % |
+| ≥ 3800 mV | 100 % |
+| ≥ 3700 mV | 75 % |
+| ≥ 3600 mV | 50 % |
+| ≥ 3500 mV | 25 % |
+| < 3500 mV | 0 % |
+
+So the stock gauge is a five-step display, not a percentage, and the top is flat
+on purpose: anything from 3800 mV up reads 100. That is why the watch appears to
+sit at full for most of a day and then fall away quickly.
+
+`0x2710` (10000 mV) is a sanity cap on the raw reading, with `0x0d16` (3350 mV)
+as the fallback when it trips.
+
+### Charging
+
+`FUN_0000c37c`, reduced to what it does:
+
+```c
+adc_select(0x104);                 /* PB2 */
+mv = adc_read_mv();
+if (((mv - 4400) & 0xffff) > 2100) {   /* outside 4400..6500 */
+    charger_present(0);
+    PB_OUT &= ~0x20;               /* PB5 low */
+} else {
+    charger_present(1);
+    ...
+    PB_OUT |= 0x20;                /* PB5 high, in one branch */
+}
+```
+
+Charging is a **window**, not a threshold: 4400 mV to 6500 mV on that rail. The
+lower bound detects USB 5 V; the upper bound rejects a reading too high to be a
+charger. The masked subtraction is how the compiler expressed the range test.
+
+This also explains **PB5**, the other pin the README used to list as "driven
+output, purpose unclear": `FUN_0000c37c` drives it from the charger state.
+
+Two more constants from the same area:
+
+- **`0xfef` = 4079 mV** — while charging, dropping to or below this re-arms the
+  charge path (`FUN_00009fb8(1)`), so it acts as the recharge threshold.
+- **`0xd16` = 3350 mV** — low battery. `FUN_0000c2ac` sets the low-battery state
+  and pushes a screen below it, and clears it once the voltage rises past it
+  again. Same value as the gauge floor, so 0 % and "low" coincide.
+
+`FUN_0000c2ac` also holds the charging *animation*: a counter bumped once every
+90 s (`0x055d4a80` µs) and capped at 100. It is a timer, not a measurement — the
+progress the watch shows while charging is not derived from the battery at all.
+
+### Trying it
+
+```bash
+docker run --rm -v $(pwd):/src -w /src/examples/battery_charge -it tlsr8232-sdk make
+python3 tools/tlsr82-debugger-client/tlsr82-debugger-client.py \
+  --serial-port /dev/ttyACM0 write_flash examples/battery_charge/_build/battery_charge.bin
+```
+
+Shows the pack voltage, the stock percentage, the PB2 rail in mV, and
+CHARGING/BATTERY. Unplugged, `CHG` should read near zero; on the charger it
+should jump to about 5000 and the state should flip within a second. If `CHG`
+stays at zero with a charger attached, PB2 is not the sense line on this board
+revision and the firmware evidence applies to another.
 
 ---
 
@@ -841,6 +947,7 @@ before trusting or flashing it.
 │   ├── logo_splash/        # e-lab innovations boot splash
 │   ├── color_test/         # RGB565 channel-mapping diagnostic
 │   ├── battery_pct/        # Battery percentage readout
+│   ├── battery_charge/     # Stock battery gauge + charger detection on PB2
 │   ├── pin_probe/          # Unknown-pin input census + touch key hunt
 │   ├── vib_hunt/           # Unknown-pin output sweep (vibrator motor hunt)
 │   ├── vib_sweep/          # Vibrator hunt pass 2: AC sweep + pin pairs
@@ -855,6 +962,7 @@ before trusting or flashing it.
 ├── lib/                    # Reusable libraries
 │   ├── display/            # ST7735 display driver
 │   ├── fonts/              # Bitmap fonts (Adafruit GFX format)
+│   ├── battery/            # Battery gauge + charger sense, from the firmware
 │   ├── pinscan/            # Unknown-pin candidate list + probe/drive helpers
 │   ├── touch/              # PC2 touch key driver (debounce, tap/long/double)
 │   ├── vibrate/            # PA5 vibrator motor driver
