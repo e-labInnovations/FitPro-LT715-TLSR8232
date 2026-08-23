@@ -333,7 +333,7 @@ first, for the reason below.
 | File | Model | Version | Build stamp | Verdict |
 | ---- | ----- | ------- | ----------- | ------- |
 | `LT716_V10712_211091429.bin` | `LT716(G)` | `V10712` | `211091429` → 2022-11-09 14:29 | good — flashed and running |
-| `LT716-2.bin` | `LT716(G)` | `V16096` | `307211745` → 2023-07-21 17:45 | corrupt — kept only as the sole trace of that build |
+| *(deleted)* `LT716-2.bin` | `LT716(G)` | `V16096` | `307211745` → 2023-07-21 17:45 | was corrupt; recoverable from commit `67407fd` if ever needed |
 
 The version string lives at `0x019054` (`0x019258` in the older dump), inside
 identical surrounding code — same firmware family, two builds. `V10712` <
@@ -402,7 +402,7 @@ python tools/tlsr82-debugger-client/tlsr82-debugger-client.py \
   --serial-port /dev/ttyACM0 dump_flash top.bin --start 0x7d000 --length 0x3000
 ```
 
-### ⚠️ Why the older stock dump is kept but not trusted
+### ⚠️ What the older, deleted dumps taught us
 
 `LT716.bin` and `LT716-2.bin` were two dumps of the same chip and they disagreed
 in 14 379 bytes across 1951 runs. The differing regions are not different data —
@@ -417,9 +417,13 @@ which is why the file appears valid and will not run.
 
 `LT716_main.bin` was byte-identical to `LT716.bin[:0x40000]` and `LT716_ota.bin`
 to `LT716.bin[0x40000:0x7c000]` — carved slices of the same corrupt image, with
-no independent content — while `LT716_nvs.bin` was 4 KB of `0xff`. All four are
-deleted; `LT716-2.bin` is kept because build `V16096` no longer exists on any
-hardware, and its own dump remains suspect.
+no independent content — while `LT716_nvs.bin` was 4 KB of `0xff`.
+
+All of them are deleted, `LT716-2.bin` included. A dump with a sliding stream is
+no use for flashing and worse than useless for analysis, and the only facts worth
+keeping from it — build `V16096`, stamp `307211745`, and the truncation
+fingerprint above — are recorded here. The files remain in git history at
+`67407fd` if a reason to look at them ever appears.
 
 A register-literal scan of the verified dump finds every GPIO port register
 individually (`PA_OEN` 15 references, `PA_OUT` 15, `PC_OEN`/`PC_OUT` 10 each,
