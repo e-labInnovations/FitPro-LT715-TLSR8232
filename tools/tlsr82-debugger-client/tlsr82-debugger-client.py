@@ -385,7 +385,25 @@ def write_to_file(filename, contents):
         f.write(bytes(contents))
 
 
-def init_soc(sws_speed=None):
+def init_soc(sws_speed=None, no_reset=False):
+    """
+    Brings the SWire link up, resetting and halting the chip on the way.
+
+    no_reset skips both the reset and the activate command, leaving whatever is
+    already running alone and only setting the link speed. That is the only way
+    to look at a chip while its own firmware runs — but on this package SWS is
+    PC7, a pin the firmware is free to claim, and Telink firmware often disables
+    the SWire interface after boot. If reads fail or come back frozen, that is
+    the answer: on this board, debug and firmware are mutually exclusive.
+    """
+    if no_reset:
+        set_pgm_speed(0x03)
+        if sws_speed is not None:
+            set_speed(sws_speed)
+        else:
+            find_suitable_sws_speed()
+        return
+
     # Set RST to low - turns of the SoC.
     write_and_read_cmd(0x00)
     # Set RST high - starts to turn on the SoC.
@@ -607,10 +625,16 @@ def watch_gpio_main(args):
 
     Note OEN is active low on this part: a 0 bit means the driver is ON.
     """
-    init_soc(args.sws_speed)
-    # Let the chip's own firmware run.
-    write_and_read_data(make_write_request(0x0602, [0x88]))
-    print('CPU running. Reading GPIO registers — trigger the vibration now.')
+    if args.no_reset:
+        # Attach to a chip that is already running, without disturbing it.
+        init_soc(args.sws_speed, no_reset=True)
+        print('Attached without reset — firmware left running as it was.')
+    else:
+        init_soc(args.sws_speed)
+        # Reset happened, so the firmware restarts from scratch here.
+        write_and_read_data(make_write_request(0x0602, [0x88]))
+        print('Chip reset and CPU restarted.')
+    print('Reading GPIO registers — trigger the vibration now.')
     print('Ctrl-C to stop and print a summary.\n')
 
     # Reads are one transaction per port, cheap enough to poll in a tight loop.
@@ -753,6 +777,12 @@ def main():
         help="Comma-separated pins to watch, to the exclusion of all others "
              "(e.g. PA3,PA4,PA5,PB2,PC4 — the ones still unaccounted for). "
              "Overrides --ignore.")
+    watch_gpio_parser.add_argument(
+        '--no-reset', action='store_true',
+        help="Attach without resetting or halting the chip, to watch firmware "
+             "that is already running. On this package SWS is PC7 and the "
+             "firmware may have taken it or disabled SWire, in which case reads "
+             "fail or never change — which is itself the answer.")
     watch_gpio_parser.add_argument(
         '--interval', type=float, default=0.0,
         help="Seconds to sleep between polls. Default: 0 (as fast as the link "

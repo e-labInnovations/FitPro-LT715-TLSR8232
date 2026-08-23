@@ -294,7 +294,41 @@ diode across the motor pads). Beep from the transistor's base/gate — or the fa
 end of its series resistor — to each candidate package pin: 3 (PA3), 4 (PA4),
 9 (PA5), 12 (PB2), 23 (PC4). Exactly one will read as a short.
 
-### Watching the stock firmware instead
+### ⚠️ SWire and running firmware are mutually exclusive
+
+On this board you get debug **or** firmware, never both at once. Two reasons
+stack up:
+
+- **SWS is PC7**, a general-purpose pin. The stock firmware is free to claim it,
+  and Telink firmware commonly disables the SWire interface after boot.
+- **Attaching resets the chip.** `init_soc` starts by pulling RST low, because
+  the ET24 package has no RST pin and the chip has to be caught in SWire mode at
+  power-on. So connecting restarts whatever was running.
+
+`watch_gpio --no-reset` attaches without the reset or the CPU halt, which is the
+only way to look at a chip mid-run. If reads fail, or come back and never change,
+that is the answer rather than a misconfiguration — and the live-watch approach
+below is off the table for this hardware.
+
+### Finding a pin without SWire
+
+The app can trigger the vibration on command, and that is enough on its own — no
+debugger required.
+
+1. **Continuity, power off.** Deterministic and takes a minute. Find the motor
+   and the small transistor next to it (SOT-23/SOT-323, usually with a flyback
+   diode across the motor pads). Beep from the transistor's base/gate — or the
+   far end of its series resistor — to each candidate package pin: 3 (PA3),
+   4 (PA4), 9 (PA5), 12 (PB2), 23 (PC4). Exactly one reads as a short.
+2. **Voltage during a buzz.** If the driver is buried, put a DMM on DC volts
+   between GND and each candidate pin in turn and hit vibrate in the app. The
+   motor pin swings to ~3 V. A single buzz is brief for a DMM, so use repeated
+   buzzes (an alarm or an incoming-call notification) or the meter's max-hold.
+3. **Static analysis.** `ghidra_project/GpioPinMap.java` decodes stores to the
+   GPIO registers, and it now has a trustworthy image to run against. Every bit
+   the firmware drives, minus the ones already mapped, is a short candidate list.
+
+### Watching the stock firmware instead — not viable here, see above
 
 Guessing pins from the outside is the slow way round. SWire reads the bus
 independently of the CPU, so with the **stock** firmware running you can watch
