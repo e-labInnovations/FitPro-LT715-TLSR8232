@@ -27,12 +27,12 @@ PC0 and PC6 have no pad on this package.
 | 1   | PC7  | SWS / PWM3 / ANA_C7                         | SWS debug pad       |
 | 2   | PA1  | PWM3_N / UART_CTS / ANA_A1                  | LCD CS              |
 | 3   | PA3  | PWM4 / UART_TX / I2C_MCK / DI / ANA_A3      | **unknown**         |
-| 4   | PA4  | PWM2 / UART_RX / I2C_MSD / CK / ANA_A4      | **unknown**         |
+| 4   | PA4  | PWM2 / UART_RX / I2C_MSD / CK / ANA_A4      | IRQ input (accel?)  |
 | 5   | —    | VDD3                                        | supply              |
 | 6   | —    | DVSS                                        | ground              |
 | 7   | —    | DVDDDEC                                     | supply              |
 | 8   | —    | VDDDEC_F                                    | supply              |
-| 9   | PA5  | PWM5 / I2C_CK / I2C_MCK / ANA_A5            | **unknown**         |
+| 9   | PA5  | PWM5 / I2C_CK / I2C_MCK / ANA_A5            | **Vibrator motor**  |
 | 10  | PA6  | PWM4_N / I2C_SD / RX / CYC2LNA / ANA_A6     | LCD RST             |
 | 11  | PB1  | PWM0 / MDO / TX / CYC2PA / ANA_B1 / pga_in0 | VBAT/4 sense        |
 | 12  | PB2  | PWM2 / MDI / UART_CTS / ANA_B2 / pga_in1    | **unknown** (HR?)   |
@@ -49,10 +49,10 @@ PC0 and PC6 have no pad on this package.
 | 23  | PC4  | DI / I2C_MSD / UART_TX / ANA_C4             | **unknown**         |
 | 24  | PC5  | CK / I2C_MCK / MCK / UART_RX / ANA_C5       | LCD CLK             |
 
-Five pins are still unaccounted for — **PA3, PA4, PA5, PB2, PC4** — and the
-vibrator motor, heart-rate sensor and accelerometer are still to place. PB4/PB5
-are only *assumed* to be plain debug pads, so they are candidates too. See
-[Finding Unknown Pins](#finding-unknown-pins).
+Three pins are still unaccounted for — **PA3, PB2, PC4** — and the heart-rate
+sensor is still to place. The vibrator (PA5) and an interrupt input that is
+probably the accelerometer (PA4) came out of decompiling the stock firmware, not
+out of pin sweeps: see [Reading the pins out of the firmware](#reading-the-pins-out-of-the-firmware).
 
 ### Display Pin Mapping
 
@@ -90,6 +90,19 @@ are only *assumed* to be plain debug pads, so they are candidates too. See
 > touched — so it is a push-pull touch-IC output, not a fixed-width pulse. Sense
 > it **float**: no internal pull is needed, and a pull would only fight the
 > driver. Driver: [lib/touch/](lib/touch/).
+
+### Vibrator Motor
+
+| Signal  | GPIO | MCU Pin | Notes                        |
+| ------- | ---- | ------- | ---------------------------- |
+| Motor   | PA5  | 9       | Active **HIGH**, plain GPIO  |
+
+> Found by decompiling the stock firmware. `FUN_0000cdc4` toggles `PA_OUT` bit 5
+> on an even/odd counter and stops once the counter passes a limit of 4, 8 or
+> 0x18 — three buzz patterns chosen by alert type. The BLE command handler at
+> `FUN_0000216c` clears the same bit when the app cancels, and three further
+> functions only ever clear it. Driver: [lib/vibrate/](lib/vibrate/), confirmed
+> on hardware by [examples/vibrate/](examples/vibrate/).
 
 ### UART Debug (FPC pads)
 
@@ -409,6 +422,58 @@ python3 tools/fwtool.py $FW atlas out.png --cjk --count 96 --cols 24
 
 ---
 
+## Reading the pins out of the firmware
+
+The pin sweeps never found the motor. Decompiling the stock firmware did, in one
+sitting — and it turns out **Ghidra 12 ships a `Telink_TC32` processor module**,
+so no community plugin is needed. Disassembly of the main application yields
+34 729 instructions and 880 functions, and the decompiler produces clean C.
+
+The scripts are in [ghidra_project/](ghidra_project/):
+
+| Script | What it does |
+| ------ | ------------ |
+| `GpioRefs.java` | finds literal-pool words holding a GPIO register address, follows references back to code, prints disassembly + C |
+| `GpioPins.java` | turns those accesses into pin names, decoding `\| 0x20` and `& 0xdf` style masks into bits |
+| `DumpFuncs.java` | full decompilation of named entry points, with callers and callees |
+
+Headless run, with the code-only slice so the fonts and bitmaps are not
+disassembled into noise:
+
+```bash
+export JAVA_HOME=/path/to/jdk21
+dd if=LT716_V10712_211091429.bin of=main.bin bs=1 count=108708   # 0x1a8a4
+ghidra/support/analyzeHeadless ~/work proj -import main.bin \
+  -loader BinaryLoader -loader-baseAddr 0x0 \
+  -processor "Telink_TC32:LE:16:default" \
+  -scriptPath ~/ghidra_scripts -postScript GpioPins.java
+```
+
+### Why the sweeps missed it
+
+The register accesses that matter are single-bit writes through a literal:
+`*DAT_0000ceb4 = *DAT_0000ceb4 | 0x20`. Two things drown that out if you are not
+careful, and both cost me time:
+
+- **Matching decompiled text for `0x800583` finds nothing.** The address lives in
+  a literal pool, so the decompiler prints the literal's symbol
+  (`DAT_0000ceb4`), not the constant. You have to map the literal back yourself.
+- **The SDK's own GPIO helpers take the pin as a parameter**, so their masks are
+  variables and they appear to touch every pin at once. `FUN_0000f098`,
+  `FUN_0000f05c` and `FUN_0000f158` are those; ignore them. Bulk inits like
+  `*DAT_0000edd8 = 0xdf` are the same kind of noise.
+
+What is left is short and unambiguous:
+
+| Pin | Evidence | Conclusion |
+| --- | -------- | ---------- |
+| PA5 | `\| 0x20` / `& 0xdf` in four functions, one of them a toggle-counter with limits 4/8/0x18 | vibrator motor |
+| PA4 | `FUN_000066e8` sets FUNC/IE, disables the output driver, clears POL, sets an interrupt-enable bit and registers a handler | interrupt input, probably the accelerometer |
+| PB5 | `FUN_0000c37c` drives it high/low against a timeout | driven output in stock firmware, purpose unclear — so the "UART RX pad" label is an assumption, not a measurement |
+| PA3, PB2, PC4 | bulk init only | probably unused |
+
+---
+
 ### ⚠️ SWire and running firmware are mutually exclusive
 
 On this board you get debug **or** firmware, never both at once. Two reasons
@@ -629,6 +694,7 @@ before trusting or flashing it.
 │   ├── vib_probe/          # Vibrator hunt by battery sag (no buzz needed)
 │   ├── touch_key/          # PC2 touch key characterisation + logic trace
 │   ├── touch_demo/         # Touch driver demo: tap / double tap / long press
+│   ├── vibrate/            # Vibrator motor patterns on PA5
 │   ├── uart/               # UART debug output
 │   ├── ble_adv/            # BLE advertising
 │   └── blink/              # Backlight blink
@@ -637,6 +703,7 @@ before trusting or flashing it.
 │   ├── fonts/              # Bitmap fonts (Adafruit GFX format)
 │   ├── pinscan/            # Unknown-pin candidate list + probe/drive helpers
 │   ├── touch/              # PC2 touch key driver (debounce, tap/long/double)
+│   ├── vibrate/            # PA5 vibrator motor driver
 │   └── uart/               # UART helper
 ├── sdk/                    # Docker-based build environment
 └── tools/
