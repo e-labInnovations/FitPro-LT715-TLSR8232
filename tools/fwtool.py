@@ -194,7 +194,8 @@ def cmd_bitmap(d, args):
 
 
 def cmd_atlas(d, args):
-    start, count, cols, sc = args.start, args.count, args.cols, args.scale
+    start = args.start if args.start is not None else (0 if args.cjk else 32)
+    count, cols, sc = args.count, args.cols, args.scale
     rows = []
     r = 0
     while r*cols < count:
@@ -254,7 +255,10 @@ def main():
 
     a = sub.add_parser('atlas', help="render a glyph atlas to PNG")
     a.add_argument('out')
-    a.add_argument('--start', type=int, default=32)
+    a.add_argument('--start', type=int, default=None,
+                   help="first glyph: codepoint for the low font, table index "
+                        "with --cjk. Default 32 (skips control glyphs), or 0 "
+                        "with --cjk.")
     a.add_argument('--count', type=int, default=320)
     a.add_argument('--cols', type=int, default=32)
     a.add_argument('--scale', type=int, default=2)
