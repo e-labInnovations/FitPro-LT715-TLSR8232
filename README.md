@@ -633,6 +633,82 @@ What is left is short and unambiguous:
 
 ---
 
+## Dumping every asset
+
+[tools/assetdump.py](tools/assetdump.py) writes the whole asset side of the
+firmware to a folder — PNGs to look at, C headers to build with, and a manifest
+tying every file back to the flash offset it came from:
+
+```bash
+python3 tools/assetdump.py binaries/stock/LT716_V10712_211091429.bin assets
+# fonts: 1995 latin glyphs in 2 sheets, 3756 CJK glyphs in 4 sheets
+# strings: 7 languages x 78 slots
+# graphics: 223 segments between 0x04a860 and 0x06fc04
+```
+
+```
+assets/
+├── MANIFEST.csv        kind, offset, length, width, height, file, note
+├── fonts/              6 atlas PNGs + font_latin.h, font_cjk.h
+├── strings/            lang0.txt … lang6.txt
+├── graphics/           229 PNGs, one per detected image
+└── headers/            one .h per detected image, 1bpp rows
+```
+
+The output is gitignored — it is derived, 3 MB, and one command away.
+
+### Exact: fonts and strings
+
+The layout is known, so these come out faithful. `font_latin.h` and
+`font_cjk.h` are drop-in — raw glyph data plus the indexing macros, and for CJK
+the binary search over the codepoint table:
+
+```c
+#include "assets/fonts/font_latin.h"
+#include "assets/fonts/font_cjk.h"
+
+const unsigned char *g = FONT_LATIN_GLYPH('A');   /* direct index */
+int i = font_cjk_index(0x4E00);                    /* binary search */
+```
+
+Both compile and run standalone. The atlas sheets confirm the coverage: ASCII,
+Latin-1, Latin Extended-A/B, Cyrillic and Greek in the direct-index range, then
+3756 CJK ideographs behind the table.
+
+### Estimated: graphics
+
+**Nothing in the firmware records where one image ends or how wide it is** — the
+code passes offsets and dimensions as constants, and there is no index table
+(checked: no run of pointer words into the region anywhere in the image).
+
+So the segmentation is inference. Splitting on blank runs does not work, because
+consecutive images butt straight up against each other; what does change at a
+boundary is the **row stride**. `assetdump.py` estimates a local width for every
+256-byte block and merges runs of blocks that agree.
+
+Two things that took a couple of attempts:
+
+- **Scoring byte equality outright rewards short strides**, because most of the
+  region is blank and zero matches zero. Pairs where both bytes are blank have to
+  be skipped — with that fixed, the first asset scores highest at 7 bytes, which
+  is the known width of the battery icons.
+- **Multiples of the true width score nearly as well**, so the winner's
+  sub-harmonics get checked and the smallest near-equal one wins.
+
+Assets whose ink is stored as `0` are shown inverted in the PNG, flagged in the
+manifest; the headers always keep the original bytes.
+
+Expect this to be right often and wrong sometimes: two neighbours that share a
+width stay merged. Use `graphics/` as a contact sheet, then render the one you
+want exactly:
+
+```bash
+python3 tools/fwtool.py $FW width  0x04a860                              # check the stride
+python3 tools/fwtool.py $FW bitmap out.png --off 0x04a860 --width 7 --rows 109
+```
+
+---
+
 ## Battery and charging, out of the firmware
 
 The first real payoff from [reversed/](reversed/): the whole battery and charger
@@ -1016,6 +1092,7 @@ before trusting or flashing it.
 └── tools/
     ├── fwtool.py           # Stock firmware explorer: map, glyphs, strings, bitmaps
     ├── decomp2proj.py      # Ghidra decompilation → buildable project in reversed/
+    ├── assetdump.py        # Stock assets → PNGs + C headers + manifest
     ├── img2c.py            # PNG → C header (RGB565, optional RLE / alpha mask)
     └── tlsr82-debugger-client/  # SWire flash tool
 ```
