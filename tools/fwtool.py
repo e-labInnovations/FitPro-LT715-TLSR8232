@@ -119,8 +119,10 @@ def cmd_map(d, args):
         langs += 1
     print("  0x%06x  %d language blocks x %d slots -> ends 0x%06x"
           % (STR_BASE, langs, STR_SLOTS, STR_BASE + langs*STR_STRIDE))
-    print("  0x%06x  unidentified, %d bytes"
-          % (STR_BASE + langs*STR_STRIDE, 0x06fc04 - (STR_BASE + langs*STR_STRIDE)))
+    a = STR_BASE + langs*STR_STRIDE
+    print("  0x%06x  1bpp graphics, %d bytes (battery icons first, 56 px wide)"
+          % (a, 0x06fc04 - a))
+    print("  0x%06x  erased to end" % 0x06fc04)
 
 
 def cmd_glyph(d, args):
