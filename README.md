@@ -232,17 +232,209 @@ backlight:
 docker run --rm -v $(pwd):/src -w /src/examples/touch_demo -it tlsr8232-sdk make
 ```
 
-### Vibrator — still open
+### 4. `vib_sweep` — vibrator motor, second pass
 
-The `vib_hunt` sweep found nothing on PA3/PA4/PA5/PB2/PC4. Things left to try:
+```bash
+docker run --rm -v $(pwd):/src -w /src/examples/vib_sweep -it tlsr8232-sdk make
+```
 
-1. `FORCE_ALL 1` — the motor gate may sit behind a bleed resistor, which the
-   census reports as `L` and the sweep then skips.
-2. `ENABLE_UART 0` — brings PB4/PB5 into the sweep.
-3. Longer `PULSE_MS` — a coin motor with a slow-charging gate may need more than
-   400 ms to spin up far enough to feel.
-4. The motor may not be on a GPIO at all: check whether the stock firmware drives
-   it through a driver IC, and cross-check with the SWS/DAT test pads.
+`vib_hunt` drove DC and a 4 Hz blink and found nothing. This closes the four
+remaining gaps:
+
+| Gap | Covered by |
+| --- | ---------- |
+| An LRA does not move on DC — it needs ~150–250 Hz | frequency sweep: 50, 100, 150, 175, 205, 235, 300 Hz |
+| Census-skipped pins (a gate with a bleed resistor reads as `L`) | every candidate is driven; the class is logged, not obeyed |
+| PB4/PB5 never swept | `ENABLE_UART 0` |
+| A driver that needs a second pin held high first | `PAIR_PASS` holds each pin high while pulsing every other |
+
+Tap the touch key to skip ahead during the pause between pins. The pair pass is
+the expensive one: 6 pins → 30 ordered pairs.
+
+Ignoring the census is the deliberate risk here — if a pin turns out to be
+another IC's output, driving it puts current through both drivers. Every drive is
+short and the pin returns to high-Z between steps, but don't leave it running
+unattended.
+
+### 5. `vib_probe` — vibrator hunt by battery sag
+
+```bash
+docker run --rm -v $(pwd):/src -w /src/examples/vib_probe -it tlsr8232-sdk make
+```
+
+The other two sweeps need a human to feel a buzz. This one measures instead: a
+spinning motor pulls tens of mA, which sags the battery rail, and PB1 already
+reads VBAT/4 through the PCB divider. So drive each candidate — DC, then 205 Hz —
+and watch what the load does to the rail.
+
+Columns are `PIN`, largest DC sag in mV, largest AC sag in mV, both held at their
+maximum across passes so a one-off event is not lost. The rail's own noise is a
+few mV; a row goes yellow at 15 mV and green at 45 mV.
+
+It is strictly more sensitive than feeling for a buzz:
+
+- catches a motor too weak, too brief, or too well damped to feel
+- tells "no motor on any pin" apart from "motor leads are off" — with the leads
+  off, nothing sags anywhere, including the pin that is really the motor's
+- also catches contention: a pin fighting another IC's output draws current too,
+  which is worth knowing before driving it any longer
+
+**Run it on the LiPo.** A bench supply or USB LDO regulates the sag away and
+every column stays at zero.
+
+### If the motor never shows up
+
+Worth confirming the motor works at all before trusting any negative result:
+bridge its two pads to 3V3 through ~100 Ω by hand. If it does not spin, no
+firmware sweep ever will.
+
+Failing that, the multimeter route is quicker than more sweeps. The motor is
+driven by a small transistor next to it (SOT-23/SOT-323, usually with a flyback
+diode across the motor pads). Beep from the transistor's base/gate — or the far
+end of its series resistor — to each candidate package pin: 3 (PA3), 4 (PA4),
+9 (PA5), 12 (PB2), 23 (PC4). Exactly one will read as a short.
+
+### Watching the stock firmware instead
+
+Guessing pins from the outside is the slow way round. SWire reads the bus
+independently of the CPU, so with the **stock** firmware running you can watch
+which pin its own code drives. This needs a watch that still has its stock
+firmware — once you have flashed over it, this route is closed until you get
+another one, and the dumps in this repo are not a substitute (see below):
+
+```bash
+# 1. re-dump the stock flash, then prove the dump is faithful
+python tools/tlsr82-debugger-client/tlsr82-debugger-client.py \
+  --serial-port /dev/ttyACM0 dump_flash binaries/stock/LT716_v2.bin
+python tools/tlsr82-debugger-client/tlsr82-debugger-client.py \
+  --serial-port /dev/ttyACM0 verify_flash binaries/stock/LT716_v2.bin
+
+# 2. flash the stock image back (only once verify_flash reports a match)
+python tools/tlsr82-debugger-client/tlsr82-debugger-client.py \
+  --serial-port /dev/ttyACM0 write_flash binaries/stock/LT716_v2.bin
+
+# 3. resume the chip and watch its GPIO registers
+python tools/tlsr82-debugger-client/tlsr82-debugger-client.py \
+  --serial-port /dev/ttyACM0 watch_gpio
+```
+
+Then make the watch vibrate. Every `OEN`/`OUT` bit transition is printed with a
+timestamp, and pins already mapped are labelled so the unexplained one stands
+out; Ctrl-C prints a summary ranked by transition count. **OEN is active low** —
+a `0` bit means the driver is on. `--regs` picks other registers (`FUNC` shows
+peripheral mux changes), `--interval` slows the output down.
+
+For the disassembly route, the Ghidra project in `ghidra_project/` already has
+`GpioPinMap.java`, which decodes stores to the GPIO registers — but re-dump
+first, for the reason below.
+
+### Stock firmware images
+
+| File | Model | Version | Build stamp | Verdict |
+| ---- | ----- | ------- | ----------- | ------- |
+| `LT716_V10712_211091429.bin` | `LT716(G)` | `V10712` | `211091429` → 2022-11-09 14:29 | good — flashed and running |
+| `LT716-2.bin` | `LT716(G)` | `V16096` | `307211745` → 2023-07-21 17:45 | corrupt — kept only as the sole trace of that build |
+
+The version string lives at `0x019054` (`0x019258` in the older dump), inside
+identical surrounding code — same firmware family, two builds. `V10712` <
+`V16096` agrees with the build stamps: the newly bought watches ship an *older*
+build than the watch dumped earlier.
+
+The stock boot screen prints all of it — model, version, short name, a per-unit
+ID, and the build stamp:
+
+```
+LT716(G)
+V10712
+716
+385C90B5      <- not present anywhere in flash; generated at runtime
+211091429
+```
+
+The build stamp sits right after the model string, `YMMDDHHMM` for year `202Y`.
+One sample alone is ambiguous — `211091429` also reads as 2021-10-09 — but
+`307211745` only parses under `YMMDDHHMM`, since `30` is not a month. So the
+newly bought watches carry a **2022-11-09** build, *older* than the 2023-07-21
+one dumped previously.
+
+`LT716_V10712_211091429.bin` checks out as a faithful read. It was dumped twice;
+the two dumps were byte-identical (`md5 a52d9e46df2ed00704a427c82fecd22c`), so the
+second copy was dropped rather than kept. It has since been flashed to a second
+watch, which boots and advertises normally.
+
+- two independent dumps came back identical, so the read is reproducible
+- the body ends exactly at the length declared at offset `0x18` (`0x1a8a4`), to
+  the byte
+- all 776 code-pointer-shaped words in the body land inside it; none dangle
+- shared markers at `0x0584e1` and `0x0594d0` sat at the *same absolute offset*
+  in this dump and in both older ones, so there is no cumulative byte drift
+- every erased run ends on a 4 KB sector boundary
+
+### ⚠️ …but the dump stops short of the chip
+
+`FLASH_SIZE` in the client is `0x7d000`, which is what the firmware occupies —
+not what the part holds. A TLSR8232F512 is `0x80000`, so **the top 12 288 bytes
+(`0x7d000`–`0x80000`) were never read.**
+
+That matters: there is no BLE MAC anywhere in the dumped range. `CFG_ADR_MAC` for
+a 512 KB layout is `0x76000`, which reads as all-`ff` here, and no Telink OUI
+appears anywhere in the image. So the MAC is either in the undumped top or
+derived at runtime.
+
+Evidence for the latter: writing this image to a *different* watch works, and
+that watch keeps its own identity — three units advertising at once show three
+distinct addresses (`4C:00:77:24:35:A2`, `F0:57:3A:F0:7A:4A`,
+`AE:18:2F:73:33:FE`), none of them a Telink OUI, which is what randomly
+generated static addresses look like. The per-unit ID on the boot screen is not
+in flash either. **So the image is portable between units** — flashing it does
+not clone one watch's identity onto another.
+
+Even so, `erase_flash` is a whole-chip erase, and nothing above `0x7d000` has
+ever been read to know what it destroys. Capture the rest before erasing:
+
+```bash
+# what size is the flash, really?
+python tools/tlsr82-debugger-client/tlsr82-debugger-client.py \
+  --serial-port /dev/ttyACM0 flash_id
+
+# grab whatever sits above the old ceiling
+python tools/tlsr82-debugger-client/tlsr82-debugger-client.py \
+  --serial-port /dev/ttyACM0 dump_flash top.bin --start 0x7d000 --length 0x3000
+```
+
+### ⚠️ Why the older stock dump is kept but not trusted
+
+`LT716.bin` and `LT716-2.bin` were two dumps of the same chip and they disagreed
+in 14 379 bytes across 1951 runs. The differing regions are not different data —
+they are *the same data at a small offset*: at `0x500` the second dump's bytes
+appear in the first at `+10`, at `0x900` at `+6`, at `0xa40` at `+24`.
+
+Ten bytes is exactly the reply truncation documented at the top of
+`tlsr82-debugger-client.py` (`2 x (4 header + 1 trailer)`). Both dumps were taken
+with the old sleep-based reply reader, lost bytes mid-stream, and re-synced — so
+everything after each loss is shifted. The header and length still look right,
+which is why the file appears valid and will not run.
+
+`LT716_main.bin` was byte-identical to `LT716.bin[:0x40000]` and `LT716_ota.bin`
+to `LT716.bin[0x40000:0x7c000]` — carved slices of the same corrupt image, with
+no independent content — while `LT716_nvs.bin` was 4 KB of `0xff`. All four are
+deleted; `LT716-2.bin` is kept because build `V16096` no longer exists on any
+hardware, and its own dump remains suspect.
+
+A register-literal scan of the verified dump finds every GPIO port register
+individually (`PA_OEN` 15 references, `PA_OUT` 15, `PC_OEN`/`PC_OUT` 10 each,
+`PB` only 4/3) and, of the PWM block, only `pwm_enable` once — no `pwm_cycle`,
+`pwm_cmp` or `pwm_phase` anywhere. That would suggest the stock firmware never
+sets up a PWM channel and drives the motor as a plain GPIO.
+
+Treat that as inconclusive, though: the literal `0x800000` appears 71 times, so
+plenty of register access goes through a base pointer plus an offset, which a
+literal scan cannot see. The absence of PWM literals is suggestive, not proof —
+which is why `vib_sweep` still sweeps frequencies.
+
+Commit `8e833ae` replaced the sleep-based reader with one that reads replies by
+length, so a fresh `dump_flash` should be clean. Confirm with `verify_flash`
+before trusting or flashing it.
 
 ---
 
@@ -261,6 +453,8 @@ The `vib_hunt` sweep found nothing on PA3/PA4/PA5/PB2/PC4. Things left to try:
 │   ├── battery_pct/        # Battery percentage readout
 │   ├── pin_probe/          # Unknown-pin input census + touch key hunt
 │   ├── vib_hunt/           # Unknown-pin output sweep (vibrator motor hunt)
+│   ├── vib_sweep/          # Vibrator hunt pass 2: AC sweep + pin pairs
+│   ├── vib_probe/          # Vibrator hunt by battery sag (no buzz needed)
 │   ├── touch_key/          # PC2 touch key characterisation + logic trace
 │   ├── touch_demo/         # Touch driver demo: tap / double tap / long press
 │   ├── uart/               # UART debug output

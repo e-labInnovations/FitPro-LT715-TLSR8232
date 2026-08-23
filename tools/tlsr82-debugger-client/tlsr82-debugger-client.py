@@ -242,6 +242,48 @@ def read_flash(addr, chunk_size):
     return contents
 
 
+def read_flash_id():
+    """
+    Reads the flash's JEDEC ID (SPI command 0x9F): manufacturer, type, capacity.
+
+    Worth doing before any dump. FLASH_SIZE here is 0x7d000, which is what the
+    stock firmware occupies, not what the chip holds — an F512 part is 0x80000.
+    Dumping the smaller number silently leaves the top of flash unread, and on
+    Telink parts that is exactly where the BLE MAC and RF calibration live.
+    """
+    # CSN low.
+    write_and_read_data(make_write_request(0x0d, [0x00]))
+    # JEDEC ID command.
+    write_and_read_data(make_write_request(0x0c, [0x9f]))
+    # FIFO mode.
+    write_and_read_data(make_write_request(0xb3, [0x80]))
+    out = []
+    for _ in range(3):
+        write_and_read_data(make_write_request(0x0c, [0xff]))
+        out.extend(write_and_read_data(make_read_request(0x0c, 1)))
+    # RAM mode.
+    write_and_read_data(make_write_request(0xb3, [0x00]))
+    # CSN high.
+    write_and_read_data(make_write_request(0x0d, [0x01]))
+    return out
+
+
+def flash_id_main(args):
+    init_soc(args.sws_speed)
+    jid = read_flash_id()
+    print(f'JEDEC ID: {hexdump(jid)}')
+    if len(jid) == 3 and 0x10 <= jid[2] <= 0x1a:
+        size = 1 << jid[2]
+        print(f'Manufacturer 0x{jid[0]:02x}, type 0x{jid[1]:02x}, '
+              f'capacity 0x{jid[2]:02x} => {size} bytes (0x{size:x})')
+        if size > FLASH_SIZE:
+            print(f'Note: FLASH_SIZE in this tool is 0x{FLASH_SIZE:x}. To capture '
+                  f'the rest, dump_flash --start 0x{FLASH_SIZE:x} --length '
+                  f'0x{size - FLASH_SIZE:x}')
+    else:
+        print('Capacity byte not recognised — check the wiring and SWS speed.')
+
+
 def write_flash(addr, data):
     send_flash_write_enable()
 
@@ -268,13 +310,14 @@ def write_flash(addr, data):
     write_and_read_data(make_write_request(0x0d, [0x01]))
 
 
-def dump_flash(debug):
+def dump_flash(debug, start=0x00, length=None):
     contents = []
     CHUNK_SIZE = 16
-    for addr in range(0x00, FLASH_SIZE, CHUNK_SIZE):
+    end = FLASH_SIZE if length is None else start + length
+    for addr in range(start, end, CHUNK_SIZE):
         # Report progress.
         if addr & 0xff == 0:
-            print(f'0x{addr:06x} {100 * addr / FLASH_SIZE:05.2f}%')
+            print(f'0x{addr:06x} {100 * (addr - start) / (end - start):05.2f}%')
         # Retry the same address in case something goes wrong.
         while True:
             try:
@@ -287,6 +330,53 @@ def dump_flash(debug):
                 print(f"Retrying 0x{addr:08x}... {e}")
 
     return contents
+
+
+def verify_flash_main(args):
+    """
+    Reads the chip's flash back and compares it byte for byte with a local file.
+
+    Worth doing on any dump you intend to keep. A dump taken with an older
+    build of this tool could silently lose bytes mid-reply and re-sync, which
+    slides the rest of the stream — the image still carries a valid header and
+    still looks the right length, but the code is shifted and unflashable. Two
+    dumps of the same chip that do not match byte for byte means one of them is
+    wrong; a dump that matches the chip on a second read is trustworthy.
+    """
+    expected = open(args.filename, 'rb').read()
+
+    init_soc(args.sws_speed)
+    global SLEEP_BETWEEN_READ_AND_WRITE_IN_S
+    SLEEP_BETWEEN_READ_AND_WRITE_IN_S = 0.001
+
+    n = min(len(expected), FLASH_SIZE) if args.length is None else args.length
+    print(f'Verifying {n} bytes against {args.filename}...')
+
+    CHUNK_SIZE = 16
+    bad = 0
+    shown = 0
+    for addr in range(0, n, CHUNK_SIZE):
+        if addr & 0xfff == 0:
+            print(f'0x{addr:06x} {100 * addr / n:05.2f}%  mismatches so far: {bad}')
+        want = expected[addr:addr + CHUNK_SIZE]
+        got = bytes(read_flash(addr, len(want)))
+        if got == want:
+            continue
+        for i in range(len(want)):
+            if got[i] != want[i]:
+                bad += 1
+                if shown < args.max_report:
+                    print(f'  0x{addr + i:06x}  file 0x{want[i]:02x}  chip 0x{got[i]:02x}')
+                    shown += 1
+
+    print(f'\n{bad} mismatching bytes out of {n}')
+    if bad == 0:
+        print('Match — the file is a faithful copy of the chip.')
+    else:
+        print('Mismatch. If this is a dump, re-dump it; if this is a write, '
+              're-flash it. Long runs of mismatch that look like the same data '
+              'at a small offset mean bytes were lost from a reply and the '
+              'stream slid.')
 
 
 def write_to_file(filename, contents):
@@ -322,7 +412,7 @@ def dump_flash_main(args):
     # Speed things up a little bit.
     global SLEEP_BETWEEN_READ_AND_WRITE_IN_S
     SLEEP_BETWEEN_READ_AND_WRITE_IN_S = 0.001
-    write_to_file(args.filename, dump_flash(args.debug))
+    write_to_file(args.filename, dump_flash(args.debug, args.start, args.length))
 
 
 def erase_flash_main(args):
@@ -484,6 +574,85 @@ def cpu_run_main(args):
     write_and_read_data(make_write_request(0x0602, [0x88]))
 
 
+# GPIO register block, in SWire address space (the firmware sees the same
+# registers at 0x800580 — the 0x800000 is the CPU's view, not the SWire bus').
+# Eight registers per port, in this order.
+GPIO_PORT_BASE = {'PA': 0x0580, 'PB': 0x0588, 'PC': 0x0590}
+GPIO_REGS = ['IN', 'IE', 'OEN', 'OUT', 'POL', 'DS', 'FUNC', 'IRQ']
+
+# What is already mapped on the FitPro LT715/LT716, so an unexplained bit stands
+# out from the display traffic.
+GPIO_KNOWN = {
+    'PA1': 'LCD CS', 'PA6': 'LCD RST',
+    'PB1': 'VBAT/4 sense', 'PB3': 'backlight', 'PB4': 'UART TX', 'PB5': 'UART RX',
+    'PC1': 'LCD DC', 'PC2': 'touch key', 'PC3': 'LCD MOSI', 'PC5': 'LCD CLK',
+    'PC7': 'SWS',
+}
+
+
+def watch_gpio_main(args):
+    """
+    Watches the GPIO registers over SWire while the chip runs its own firmware.
+
+    SWire reads the bus independently of the CPU, so with the stock firmware
+    running this shows which pin the stock code drives — no disassembly needed.
+    Flash the stock image first, then run this and make the watch do the thing
+    you are hunting (vibrate, buzz an alarm, take a BLE notification). Whichever
+    OEN/OUT bit moves at that moment is the pin.
+
+    Note OEN is active low on this part: a 0 bit means the driver is ON.
+    """
+    init_soc(args.sws_speed)
+    # Let the chip's own firmware run.
+    write_and_read_data(make_write_request(0x0602, [0x88]))
+    print('CPU running. Reading GPIO registers — trigger the vibration now.')
+    print('Ctrl-C to stop and print a summary.\n')
+
+    # Reads are one transaction per port, cheap enough to poll in a tight loop.
+    global SLEEP_BETWEEN_READ_AND_WRITE_IN_S
+    SLEEP_BETWEEN_READ_AND_WRITE_IN_S = 0.001
+
+    watched = [r.strip().upper() for r in args.regs.split(',')]
+    prev = {}
+    changed_bits = {}
+    t0 = time.time()
+
+    try:
+        while True:
+            for port, base in GPIO_PORT_BASE.items():
+                block = write_and_read_data(make_read_request(base, len(GPIO_REGS)))
+                for i, reg in enumerate(GPIO_REGS):
+                    if reg not in watched:
+                        continue
+                    key = f'{port}_{reg}'
+                    val = block[i]
+                    old = prev.get(key)
+                    prev[key] = val
+                    if old is None or old == val:
+                        continue
+
+                    diff = old ^ val
+                    for bit in range(8):
+                        if not diff & (1 << bit):
+                            continue
+                        pin = f'{port}{bit}'
+                        note = GPIO_KNOWN.get(pin, '** UNMAPPED **')
+                        level = 1 if val & (1 << bit) else 0
+                        print(f'{time.time() - t0:8.3f}  {key} {pin} -> {level}'
+                              f'   0x{old:02x}->0x{val:02x}   {note}')
+                        changed_bits[f'{key} {pin}'] = changed_bits.get(
+                            f'{key} {pin}', 0) + 1
+            time.sleep(args.interval)
+    except KeyboardInterrupt:
+        print('\n--- bits that moved ---')
+        if not changed_bits:
+            print('none — is the CPU actually running the stock firmware?')
+        for k in sorted(changed_bits, key=lambda k: -changed_bits[k]):
+            port_bit = k.split()[1]
+            note = GPIO_KNOWN.get(port_bit, '** UNMAPPED **')
+            print(f'{k:16s} {changed_bits[k]:6d} transitions   {note}')
+
+
 def main():
     args_parser = argparse.ArgumentParser(description='TLSR')
     args_parser.add_argument('--serial-port', type=str, required=True,
@@ -502,6 +671,16 @@ def main():
     dump_flash_parser = subparsers.add_parser('dump_flash')
     dump_flash_parser.set_defaults(func=dump_flash_main)
     dump_flash_parser.add_argument('filename', type=str)
+    dump_flash_parser.add_argument(
+        '--start', type=lambda v: int(v, 0), default=0x00,
+        help="First address to read. Default: 0.")
+    dump_flash_parser.add_argument(
+        '--length', type=lambda v: int(v, 0), default=None,
+        help=f"Bytes to read. Default: to 0x{FLASH_SIZE:x}. Run flash_id first "
+             "— the chip is usually bigger than that.")
+
+    flash_id_parser = subparsers.add_parser('flash_id')
+    flash_id_parser.set_defaults(func=flash_id_main)
 
     dump_ram_parser = subparsers.add_parser('dump_ram')
     dump_ram_parser.set_defaults(func=dump_ram_main)
@@ -528,6 +707,30 @@ def main():
 
     probe_chunk_parser = subparsers.add_parser('probe_chunk')
     probe_chunk_parser.set_defaults(func=probe_chunk_main)
+
+    verify_flash_parser = subparsers.add_parser('verify_flash')
+    verify_flash_parser.set_defaults(func=verify_flash_main)
+    verify_flash_parser.add_argument('filename', type=str)
+    verify_flash_parser.add_argument(
+        '--length', type=int, default=None,
+        help="Bytes to compare. Default: the file's length, capped at the flash "
+             "size.")
+    verify_flash_parser.add_argument(
+        '--max-report', type=int, default=32,
+        help="Stop printing individual mismatches after this many. The total is "
+             "still counted. Default: 32.")
+
+    watch_gpio_parser = subparsers.add_parser('watch_gpio')
+    watch_gpio_parser.set_defaults(func=watch_gpio_main)
+    watch_gpio_parser.add_argument(
+        '--regs', type=str, default='OEN,OUT',
+        help="Comma-separated GPIO registers to watch, from "
+             f"{','.join(GPIO_REGS)}. Default: OEN,OUT — the two that change "
+             "when firmware drives a pin.")
+    watch_gpio_parser.add_argument(
+        '--interval', type=float, default=0.0,
+        help="Seconds to sleep between polls. Default: 0 (as fast as the link "
+             "allows). Raise it if the output scrolls too fast to read.")
 
     args = args_parser.parse_args()
 
