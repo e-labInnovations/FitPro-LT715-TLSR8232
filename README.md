@@ -465,6 +465,44 @@ Be clear about what that file is and is not:
   rebuilding the types by hand, function by function. Practical for a subsystem
   you care about; a large project for 1040 functions.
 
+### As a buildable project
+
+[reversed/](reversed/) takes that file the rest of the way: generated headers, a
+Makefile, and C the compiler accepts.
+
+```bash
+docker run --rm -v $(pwd):/src -w /src/reversed -it tlsr8232-sdk make
+# compiled 1040 functions
+#  184652 bytes of text, zero errors
+```
+
+`tools/decomp2proj.py` does it mechanically, and the part that matters is
+resolving the symbols Ghidra leaves opaque. Every `DAT_` is a literal-pool word
+inside the image, so its value can just be read out of the binary:
+`PTR_DAT_0000ceb4` is the word at `0xceb4`, which is `0x800583`, which is
+`PA_OUT`. Substituting the 343 dereferences that land on a known register turns
+
+```c
+*PTR_DAT_0000ceb4 = *PTR_DAT_0000ceb4 | 0x20;
+```
+
+into
+
+```c
+PA_OUT = PA_OUT | 0x20;
+```
+
+**It compiles; it will never run** — and [reversed/README.md](reversed/README.md)
+is blunt about why. The image is full of pointers to its own code (jump tables,
+callback arrays), and recompiling moves every function, so each of those now aims
+somewhere meaningless. The fonts, strings and bitmaps it references are not in
+the project either. There is deliberately no target that emits a `.bin`.
+
+Places where the recovery is incomplete are marked rather than hidden:
+`FW_UNKNOWN_ARG` (154 — a call site with fewer arguments than the signature),
+`FW_VOID_RESULT` (205 — a value read from a function recovered as returning
+none), `dropped:` comments (264 — surplus arguments kept instead of deleted).
+
 So the workflow that pays off is not "decompile everything and read it" but
 "decompile everything, then grep it": find the register write, follow it to the
 task, follow the task to its caller, and name only that path. A helper for
@@ -823,9 +861,11 @@ before trusting or flashing it.
 │   └── uart/               # UART helper
 ├── ghidra_project/         # Ghidra database + analysis scripts (see below)
 │   └── decompiled/         # Whole stock image decompiled to C, 1039 functions
+├── reversed/               # That decompilation as a buildable C project
 ├── sdk/                    # Docker-based build environment
 └── tools/
     ├── fwtool.py           # Stock firmware explorer: map, glyphs, strings, bitmaps
+    ├── decomp2proj.py      # Ghidra decompilation → buildable project in reversed/
     ├── img2c.py            # PNG → C header (RGB565, optional RLE / alpha mask)
     └── tlsr82-debugger-client/  # SWire flash tool
 ```
