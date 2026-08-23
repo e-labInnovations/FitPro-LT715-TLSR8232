@@ -26,9 +26,14 @@
  * and reports 100 for everything from 3800 mV up. That flat top is in the
  * firmware's own table, not a rounding artefact here.
  *
- * Layout note: FreeMono9pt7b is a monospaced font, and every value below is
- * right-aligned in a fixed-width field, so the columns line up and a shrinking
- * number cannot leave a stale digit behind.
+ * Layout: FreeMono9pt7b is monospaced at an 11 px advance, so a 128 px wide
+ * panel holds exactly 11 characters. Labelled rows are 5 + 6 = 11 and fit;
+ * the status lines are printed on their own, unlabelled, because "CHARGING"
+ * behind a padded label came to 13 and wrapped onto the row below - which is
+ * what left "RY" and a stray "TT" on screen. Wrapping is off as a backstop.
+ *
+ * Values are right-aligned in fixed-width fields and drawn opaque, so a
+ * shrinking number cannot leave a stale digit behind.
  */
 
 #include "drivers/5316/bsp.h"
@@ -46,6 +51,13 @@
 #define ROW_H    15
 #define LABEL_W   5      // "BATT " - padded so values start in one column
 #define VALUE_W   6      // right-aligned, widest is "5224mV"
+#define LINE_W   11      // 128 px / 11 px per character - the hard limit
+
+// Catch a layout edit that would overflow the panel at build time instead of
+// on screen, which is how the wrapped status rows got shipped once already.
+#if LABEL_W + VALUE_W > LINE_W
+#error "labelled row is wider than the panel"
+#endif
 
 _attribute_ram_code_ void irq_handler(void) {}
 
@@ -111,6 +123,9 @@ int main() {
     display_init(INITR_GREENTAB, 0);
     gfx_init(ST7735_TFTWIDTH, ST7735_TFTHEIGHT, 0);
     gfx_set_font(&FreeMono9pt7b);
+    // No wrapping: an over-long row must be visibly clipped, not silently
+    // continued on top of the next one.
+    gfx_set_text_wrap(false);
     gfx_fill_screen(ST77XX_BLACK);
 
     draw(ROW0, "BATT + CHG", ST77XX_CYAN);
@@ -139,14 +154,15 @@ int main() {
         fmt_row(row, "PIN", val);
         draw(ROW0 + ROW_H * 5, row, ST77XX_BLUE);
 
-        fmt_row(row, "", on ? "CHARGING" : " BATTERY");
-        draw(ROW0 + ROW_H * 6, row, on ? ST77XX_GREEN : ST77XX_YELLOW);
+        draw(ROW0 + ROW_H * 6, on ? "CHARGING" : " BATTERY",
+             on ? ST77XX_GREEN : ST77XX_YELLOW);
 
         // Stock behaviour: the low-battery warning is gated on NOT charging
         // (FUN_0000be6c checks both), so plugging in clears it immediately
         // rather than waiting for the pack to recover.
-        fmt_row(row, "", (battery_is_low(batt) && !on) ? "LOW BATT" : "        ");
-        draw(ROW0 + ROW_H * 7, row, ST77XX_RED);
+        draw(ROW0 + ROW_H * 7,
+             (battery_is_low(batt) && !on) ? "LOW BATT" : "        ",
+             ST77XX_RED);
 
         sleep_ms(500);
     }

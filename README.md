@@ -710,9 +710,12 @@ follows **whichever of VBAT and VBUS is higher**, so it is never at zero:
 
 | State | Pack | PB2 pin | × 8 = rail | Verdict |
 | ----- | ---- | ------- | ---------- | ------- |
-| battery, unplugged | 4092 mV | 515 mV | **4120 mV** — the pack (ratio 7.95) | below 4400 → BATTERY |
-| battery, charging | 4236 mV | 653 mV | **5224 mV** — a USB supply | inside window → CHARGING |
-| no battery, on 3V3 | — | 58 mV | 464 mV | no rail at all |
+| battery, unplugged | 4028 mV | 507 mV | **4056 mV** — the pack (ratio 7.94) | below 4400 → BATTERY ✓ |
+| battery, charging | 4200 mV | 652 mV | **5216 mV** — a USB supply | inside window → CHARGING ✓ |
+| no battery, on 3V3 | 396 mV | 47 mV | 376 mV | no rail at all ✓ |
+
+Measured on hardware after the fix, and the divider ratio reproduces across
+runs: 7.95 on one pack voltage, 7.94 on another.
 
 That is what the lower bound is for: **4400 mV is above a full battery
 (4200 mV)**, so a rail reading above it can only be an external supply. Testing
