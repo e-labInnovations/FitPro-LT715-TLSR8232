@@ -2,8 +2,10 @@
 
 The stock LT716 firmware, decompiled and turned into C that a compiler accepts.
 
+Run from the **repo root**, like every other build here:
+
 ```bash
-docker run --rm -v $(pwd)/..:/src -w /src/reversed -it tlsr8232-sdk make
+docker run --rm -v $(pwd):/src -w /src/reversed -it tlsr8232-sdk make
 # compiled 1040 functions
 #    text    data     bss     dec     hex filename
 #  184652       0       0  184652   2d14c _build/firmware.o
