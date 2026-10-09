@@ -11,6 +11,8 @@
 
 TARGET = firmware
 
+SDK ?= $(abspath ../sdk/tlsr8232)
+
 CC = $(TC32_HOME)/bin/tc32-elf-gcc
 LD = $(TC32_HOME)/bin/tc32-elf-ld
 CP = $(TC32_HOME)/bin/tc32-elf-objcopy

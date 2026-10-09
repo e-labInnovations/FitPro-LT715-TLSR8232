@@ -43,7 +43,7 @@ MADCTL BGR bit in the driver — see [../image/README.md](../image/README.md).
 ## Build and flash
 
 ```bash
-docker run --rm -v $(pwd)/../..:/src -w /src/examples/logo_splash -it tlsr8232-sdk make
+docker run --rm -v $(pwd)/../..:/src -w /src/examples/logo_splash ghcr.io/e-labinnovations/tlsr8232-sdk make
 
 cd ../../tools/tlsr82-debugger-client
 python tlsr82-debugger-client.py --serial-port /dev/ttyACM0 \

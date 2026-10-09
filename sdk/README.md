@@ -1,103 +1,104 @@
-# TLSR8232 SDK Docker Environment
+# TLSR8232 Build Environment
 
-Docker-based build environment for developing custom firmware for the Telink TLSR8232 chipset.
+Everything needed to build firmware for the FitPro LT715 (Telink TLSR8232):
 
-The Docker image includes:
+| Path           | What                                                         |
+| -------------- | ------------------------------------------------------------ |
+| `tlsr8232/`    | Telink BLE SDK `telink_hawk_ble_sdk_v1.3.1`, as shipped       |
+| `tlsr8232.mk`  | Shared build rules every example includes                    |
+| `Dockerfile`   | Build image: TC32 GCC and `make`, nothing else               |
 
-- Ubuntu 22.04
-- TC32 GCC toolchain (Telink's custom compiler, not standard ARM)
-- Telink TLSR8232 BLE SDK (`ble_sdk_hawk`)
-- Build utilities: `make`, `wget`, `unzip`, `bzip2`
-
-This avoids installing the SDK and compiler directly on your host machine and keeps builds reproducible.
+The SDK lives in the repo, not in the image, so builds don't depend on Telink's
+download links staying up, and an SDK patch is an ordinary commit that takes
+effect without rebuilding the image.
 
 ---
 
-## Build Image
+## The Image
 
-```bash
-docker build -t tlsr8232-sdk .
+```
+ghcr.io/e-labinnovations/tlsr8232-sdk
 ```
 
-> **Apple Silicon**: the Dockerfile pins `--platform=linux/amd64` because the TC32
-> toolchain is x86_64-only. A native arm64 image builds happily and then fails with
-> `exec format error` the first time it runs `tc32-elf-gcc`.
+- Debian bookworm-slim
+- TC32 GCC 4.5.1 (`tc32_gcc_v2.0`) at `/opt/tc32` (`$TC32_HOME`, on `PATH`):
+  compiler, assembler and binutils. The debuggers (openocd, gdb, tcdb), docs
+  and test binaries are removed.
+- `make`
 
----
+About 37 MB to download (150 MB unpacked). It is `linux/amd64` only, because
+the TC32 toolchain only exists as x86_64 Linux binaries. Docker Desktop on
+Apple Silicon runs it under emulation, and prints a platform warning.
 
-## Build a Project
-
-Run from the **project root directory**:
+### Building it locally
 
 ```bash
-docker run --rm -v $(pwd):/src -w /src/examples/display -it tlsr8232-sdk make
+docker build --platform linux/amd64 -t ghcr.io/e-labinnovations/tlsr8232-sdk sdk/
 ```
 
-Mount the **repo root**, not the example directory — examples that use `lib/`
-(display, fonts, uart) reference it as `../../lib`.
+`--platform` matters on Apple Silicon: without it Docker tags the image as
+arm64 and `docker run` won't find it.
 
-> **Note**: `$SDK` is set in the image to `/opt/ble_sdk_hawk`, which is where the
-> zip actually extracts to — despite being named `8232_BLE_SDK.zip`. No need to
-> pass `SDK=` on the command line.
+The Dockerfile downloads the toolchain from Telink's mirror
+(`TC32_URL`) and checks its SHA-256 (`TC32_SHA256`), so a changed or
+truncated download fails the build. If the mirror disappears, pass
+`--build-arg TC32_URL=<another copy>`; the published image also keeps a
+working copy of the toolchain.
+
+### Publishing
+
+[.github/workflows/sdk-image.yml](../.github/workflows/sdk-image.yml) builds
+the image when `sdk/Dockerfile` changes on `main` and pushes it to GHCR, tagged
+`latest` and with the commit's short SHA. It then builds every example in the
+new image. It can also be run by hand from the Actions tab.
 
 ---
 
-## Makefile Template
+## Build an Example
 
-Copy this into your example's `Makefile` and change `TARGET`:
+Run from the **repo root**:
+
+```bash
+docker run --rm -v "$(pwd)":/src -w /src/examples/display ghcr.io/e-labinnovations/tlsr8232-sdk make
+```
+
+Windows (PowerShell): `-v "${PWD}:/src"`; cmd.exe: `-v "%cd%:/src"`.
+
+Mount the repo root, not the example directory: examples use `lib/` and `sdk/`
+through `../../`. The output is `examples/<name>/_build/<name>.bin`.
+
+---
+
+## Writing an Example
+
+```
+examples/blink/
+├── Makefile
+└── main.c
+```
+
+`Makefile`:
 
 ```makefile
-TARGET=firmware
-CC = $(TC32_HOME)/bin/tc32-elf-gcc
-LD = $(TC32_HOME)/bin/tc32-elf-ld
-CP = $(TC32_HOME)/bin/tc32-elf-objcopy
-CCFLAGS = -Wall -std=gnu99 -DMCU_STARTUP_5316 -I $(SDK)/ -ffunction-sections -fdata-sections
-LDFLAGS = --gc-sections -T $(SDK)/boot.link
-LIB = $(SDK)/proj_lib/liblt_5316.a
-BUILD_DIR = _build
-
-DRIVERS_SRC = \
-	$(SDK)/drivers/5316/gpio.c \
-	$(SDK)/drivers/5316/analog.c \
-	$(SDK)/drivers/5316/clock.c \
-	$(SDK)/drivers/5316/bsp.c \
-	$(SDK)/drivers/5316/spi.c \
-	$(SDK)/drivers/5316/adc.c
-
-DRIVERS_OBJS = $(addprefix $(BUILD_DIR)/drivers/, $(notdir $(DRIVERS_SRC:%.c=%.o)))
-STARTUP_SRC = $(SDK)/boot/5316/cstartup_5316.S
-STARTUP_OBJ = $(addprefix $(BUILD_DIR)/asm/, $(notdir $(STARTUP_SRC:%.S=%.o)))
-SRC = main.c
-OBJS = $(addprefix $(BUILD_DIR)/, $(SRC:%.c=%.o))
-
-$(BUILD_DIR)/$(TARGET).bin: $(BUILD_DIR)/$(TARGET)
-	$(CP) -O binary $< $@
-
-$(BUILD_DIR)/$(TARGET): $(DRIVERS_OBJS) $(STARTUP_OBJ) $(OBJS)
-	$(LD) $(LDFLAGS) -o $@ $(OBJS) $(DRIVERS_OBJS) $(STARTUP_OBJ) $(LIB)
-
-$(BUILD_DIR)/drivers/%.o: $(SDK)/drivers/5316/%.c
-	mkdir -p $(BUILD_DIR)/drivers
-	$(CC) -c $(CCFLAGS) -o $@ $<
-
-$(BUILD_DIR)/asm/cstartup_5316.o: $(STARTUP_SRC)
-	mkdir -p $(BUILD_DIR)/asm
-	$(CC) -c $(CCFLAGS) $< -o $@
-
-$(BUILD_DIR)/%.o: %.c
-	mkdir -p $(BUILD_DIR)
-	$(CC) -c $(CCFLAGS) -o $@ $<
-
-.PHONY: clean
-clean:
-	rm -rf $(BUILD_DIR)
+TARGET  = blink
+SRC     = main.c
+include ../../sdk/tlsr8232.mk
 ```
 
----
+| Variable  | Meaning                                                            |
+| --------- | ------------------------------------------------------------------ |
+| `TARGET`  | Output name                                                        |
+| `SRC`     | The example's own sources                                          |
+| `LIB_SRC` | Sources from `lib/`, e.g. `display/display.c fonts/FreeMono9pt7b.c` |
+| `SDK_SRC` | SDK sources beyond the base drivers, e.g. `drivers/5316/spi.c common/string.c` |
+| `DEFINES` | Extra `-D` flags                                                   |
 
-## main.c Boilerplate
+Every build already gets the base drivers (`gpio`, `analog`, `clock`, `bsp`,
+`adc`), the startup code, `div_mod.S` (integer division) and libgcc. The linker
+drops whatever the program doesn't use. `lib/` is on the include path, so
+`#include "display/display.h"` works.
 
-Every firmware needs this minimum structure:
+`main.c` needs at least:
 
 ```c
 #include <stdint.h>
@@ -107,7 +108,7 @@ Every firmware needs this minimum structure:
 #include "drivers/5316/driver_5316.h"
 #include "drivers/5316/gpio.h"
 
-// Required by linker — do not remove!
+// Required by the linker: do not remove.
 _attribute_ram_code_ void irq_handler(void) {}
 
 int main() {
@@ -121,3 +122,13 @@ int main() {
     return 0;
 }
 ```
+
+---
+
+## SDK Contents
+
+`tlsr8232/` is `ble_sdk_hawk/` from Telink's `8232_BLE_SDK.zip`
+(SHA-256 `7d9bbe4f…6e183425`), unchanged apart from dropping
+`tl_check_fw2.exe`, a Windows-only tool. The zip's release note is kept
+alongside. The SDK files are © Telink Semiconductor; see their headers for
+terms.

@@ -160,7 +160,7 @@ The shared candidate list and the probe helpers live in [lib/pinscan/](lib/pinsc
 ### 1. `pin_probe` — touch key and other inputs
 
 ```bash
-docker run --rm -v $(pwd):/src -w /src/examples/pin_probe -it tlsr8232-sdk make
+docker run --rm -v $(pwd):/src -w /src/examples/pin_probe ghcr.io/e-labinnovations/tlsr8232-sdk make
 ```
 
 **Stage 1 — census.** Each candidate is read as an input, first with the internal
@@ -195,7 +195,7 @@ single quick tap is never lost between redraws.
 > shows up*.
 
 ```bash
-docker run --rm -v $(pwd):/src -w /src/examples/vib_hunt -it tlsr8232-sdk make
+docker run --rm -v $(pwd):/src -w /src/examples/vib_hunt ghcr.io/e-labinnovations/tlsr8232-sdk make
 ```
 
 Sweeps one candidate at a time, showing the pin name and phase on screen. Hold
@@ -219,7 +219,7 @@ motor pin is never left enabled while the census runs.
 ### 3. `touch_key` — PC2 only
 
 ```bash
-docker run --rm -v $(pwd):/src -w /src/examples/touch_key -it tlsr8232-sdk make
+docker run --rm -v $(pwd):/src -w /src/examples/touch_key ghcr.io/e-labinnovations/tlsr8232-sdk make
 ```
 
 `pin_probe` pinned the touch key to PC2, so this one watches only that pin and
@@ -270,13 +270,13 @@ Working demo — tap / double-tap counters, live hold time, long press toggles t
 backlight:
 
 ```bash
-docker run --rm -v $(pwd):/src -w /src/examples/touch_demo -it tlsr8232-sdk make
+docker run --rm -v $(pwd):/src -w /src/examples/touch_demo ghcr.io/e-labinnovations/tlsr8232-sdk make
 ```
 
 ### 4. `vib_sweep` — vibrator motor, second pass
 
 ```bash
-docker run --rm -v $(pwd):/src -w /src/examples/vib_sweep -it tlsr8232-sdk make
+docker run --rm -v $(pwd):/src -w /src/examples/vib_sweep ghcr.io/e-labinnovations/tlsr8232-sdk make
 ```
 
 `vib_hunt` drove DC and a 4 Hz blink and found nothing. This closes the four
@@ -300,7 +300,7 @@ unattended.
 ### 5. `vib_probe` — vibrator hunt by battery sag
 
 ```bash
-docker run --rm -v $(pwd):/src -w /src/examples/vib_probe -it tlsr8232-sdk make
+docker run --rm -v $(pwd):/src -w /src/examples/vib_probe ghcr.io/e-labinnovations/tlsr8232-sdk make
 ```
 
 The other two sweeps need a human to feel a buzz. This one measures instead: a
@@ -476,7 +476,7 @@ Be clear about what that file is and is not:
 Makefile, and C the compiler accepts.
 
 ```bash
-docker run --rm -v $(pwd):/src -w /src/reversed -it tlsr8232-sdk make
+docker run --rm -v $(pwd):/src -w /src/reversed ghcr.io/e-labinnovations/tlsr8232-sdk make
 # compiled 1040 functions
 #  184652 bytes of text, zero errors
 ```
@@ -960,7 +960,7 @@ progress the watch shows while charging is not derived from the battery at all.
 ### Trying it
 
 ```bash
-docker run --rm -v $(pwd):/src -w /src/examples/battery_charge -it tlsr8232-sdk make
+docker run --rm -v $(pwd):/src -w /src/examples/battery_charge ghcr.io/e-labinnovations/tlsr8232-sdk make
 python3 tools/tlsr82-debugger-client/tlsr82-debugger-client.py \
   --serial-port /dev/ttyACM0 write_flash examples/battery_charge/_build/battery_charge.bin
 ```
@@ -1211,7 +1211,7 @@ before trusting or flashing it.
 ├── ghidra_project/         # Ghidra database + analysis scripts (see below)
 │   └── decompiled/         # Whole stock image decompiled to C, 1039 functions
 ├── reversed/               # That decompilation as a buildable C project
-├── sdk/                    # Docker-based build environment
+├── sdk/                    # Build image, shared make rules, Telink SDK (tlsr8232/)
 └── tools/
     ├── fwtool.py           # Stock firmware explorer: map, glyphs, strings, bitmaps
     ├── decomp2proj.py      # Ghidra decompilation → buildable project in reversed/
@@ -1224,18 +1224,17 @@ before trusting or flashing it.
 
 ## Quick Start
 
-### 1. Build the Docker SDK image
+### 1. Get the build image
 
-```bash
-cd sdk
-docker build -t tlsr8232-sdk .
-```
+The image holds only the TC32 toolchain and `make`; the Telink SDK is in this
+repo under `sdk/tlsr8232/`. `docker run` pulls the image on first use. To build
+it locally instead, see [sdk/README.md](sdk/README.md).
 
 ### 2. Build an example
 
 ```bash
 # mount the repo root — examples pull in ../../lib
-docker run --rm -v $(pwd):/src -w /src/examples/display -it tlsr8232-sdk make
+docker run --rm -v $(pwd):/src -w /src/examples/display ghcr.io/e-labinnovations/tlsr8232-sdk make
 ```
 
 ### 3. Flash to the watch

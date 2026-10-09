@@ -60,8 +60,7 @@ trust in the repo. Regenerate with `python3 make_assets.py` inside `assets/`.
 ## Build and flash
 
 ```bash
-docker run --rm -v $(pwd)/../..:/src -w /src/examples/image -it tlsr8232-sdk \
-  make SDK=/opt/8232_BLE_SDK/ble_sdk_hawk
+docker run --rm -v $(pwd)/../..:/src -w /src/examples/image ghcr.io/e-labinnovations/tlsr8232-sdk make
 
 cd ../../tools/tlsr82-debugger-client
 python tlsr82-debugger-client.py --serial-port /dev/ttyACM0 \
