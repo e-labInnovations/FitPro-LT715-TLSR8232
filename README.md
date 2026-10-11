@@ -5,9 +5,15 @@ smartwatch, built on the **Telink TLSR8232** SoC.
 
 [![Hacking a ₹249 Smartwatch: Custom Firmware on TLSR8232](https://elabins.com/widgets/post/hacking-a-249-smartwatch-custom-firmware-on-tlsr8232.svg)](https://elabins.com/blog/hacking-a-249-smartwatch-custom-firmware-on-tlsr8232)
 
-<!-- Photo of the watch: add docs/images/lt715.jpg, then uncomment.
-![FitPro LT715](docs/images/lt715.jpg)
--->
+<p align="center">
+  <img src="docs/images/splash-icon.jpg" height="150" alt="The e-lab mark drawn from an RLE image in flash">
+  <img src="docs/images/splash-wordmark.jpg" height="150" alt="The e-lab innovations wordmark and URL on the watch display">
+  <img src="docs/images/display-text.jpg" height="150" alt="Text and shapes drawn by the custom firmware">
+  <img src="docs/images/color-test.jpg" height="150" alt="Red, green and blue bars from the colour test">
+  <img src="docs/images/oepl-hello.jpg" height="150" alt="Three Hello lines uploaded over BLE to the OpenEPaperLink firmware">
+  <br>
+  <sub>The splash screen, the graphics layer, the colour test that settled the RGB565 order, and OpenEPaperLink's BLE image upload.</sub>
+</p>
 
 ## Hardware
 
@@ -18,6 +24,13 @@ smartwatch, built on the **Telink TLSR8232** SoC.
 | Input   | Touch key on PC2                                          |
 | Motor   | Vibrator on PA5                                           |
 | Power   | LiPo; battery and charger sensing on the ADC (PB2)        |
+
+<p align="center">
+  <img src="docs/images/board.jpg" height="260" alt="The TLSR8232 on the LT715 board">
+  <img src="docs/images/test-pads.jpg" height="260" alt="The watch on a breadboard with its SWS, 3V3 and GND test pads wired">
+  <br>
+  <sub>The TLSR8232 (24-pin ET24, no reset pin) and the watch wired up through its test pads.</sub>
+</p>
 
 Full pin map and board notes: [docs/hardware.md](docs/hardware.md).
 
@@ -48,6 +61,12 @@ Flash it:
 python tools/tlsr82-debugger-client/tlsr82-debugger-client.py \
   --serial-port /dev/ttyACM0 write_flash examples/display/_build/display.bin
 ```
+
+<p align="center">
+  <img src="docs/images/swire-wiring.jpg" width="640" alt="Wiring from a Blue Pill to the watch's SWS, GND and 3V3 pads">
+  <br>
+  <sub>The programmer: a Blue Pill running pvvx's USB2Swire. A7 through 1K and A6 direct both go to SWS.</sub>
+</p>
 
 Writing your own example: [sdk/README.md](sdk/README.md).
 
